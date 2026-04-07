@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upcoming Events — TNS Arm Wrestling</title>
+<meta name="description" content="Upcoming arm wrestling events by TNS — Pune's #1 arm wrestling club. Register now for competitions, tournaments & championships.">
+<link rel="icon" href="TNS-Logo-6.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-backend.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#f5c518;
+  --red2:#ffd84d;
+  --rg:rgba(245,197,24,0.18);
+  --gold:#f5c518;
+  --dark:#08080f;
+  --card:#111118;
+  --card2:#18181f;
+  --border:rgba(255,255,255,0.07);
+  --text:#f0f0f8;
+  --muted:#7a7a9a;
+  --font:'Outfit',sans-serif;
+  --display:'Teko',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:var(--font);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+
+/* ─── NAV ─────────────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5vw;height:64px;display:flex;align-items:center;gap:24px;transition:background .3s,border .3s}
+.nav.stuck{background:rgba(8,8,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo img{width:40px;height:40px;border-radius:50%;border:2px solid var(--red);object-fit:cover}
+.nav-name{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:1px;line-height:1}
+.nav-name span{color:var(--red)}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);transition:all .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(255,255,255,0.06)}
+.nav-links a.active{color:var(--red)}
+.nav-cta{margin-left:8px;padding:9px 22px;background:var(--red);border-radius:10px;font-size:14px;font-weight:600;color:#000;transition:all .2s;white-space:nowrap;border:none;cursor:pointer;display:inline-flex;align-items:center}
+.nav-cta:hover{background:var(--red2);transform:translateY(-1px)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;border:none;background:none}
+.hamburger span{width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s;display:block}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mobile-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,0.98);backdrop-filter:blur(20px);z-index:99;padding:24px 5vw;flex-direction:column;gap:4px}
+.mobile-nav.open{display:flex}
+.mobile-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:var(--muted);border:1px solid transparent;transition:all .2s}
+.mobile-nav a:hover{color:var(--text);background:var(--card);border-color:var(--border)}
+.mobile-nav .m-cta{margin-top:12px;padding:16px;background:var(--red);border-radius:12px;font-size:16px;font-weight:600;color:#000;text-align:center}
+
+/* ─── TICKER ──────────────────────────────────── */
+.ticker{background:var(--red);height:40px;display:flex;align-items:center;overflow:hidden;margin-top:64px}
+.ticker-track{display:flex;animation:tick 28s linear infinite;white-space:nowrap}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 40px;font-size:12.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#000}
+.ticker-sep{opacity:.5;font-size:10px;color:#000}
+
+/* ─── HERO ────────────────────────────────────── */
+.tp-hero{position:relative;min-height:72vh;display:flex;align-items:center;overflow:hidden}
+.tp-hero-bg{position:absolute;inset:0;z-index:0}
+.tp-hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 25%}
+.tp-hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,8,15,.96) 0%,rgba(8,8,15,.78) 55%,rgba(8,8,15,.35) 100%)}
+.tp-hero-content{position:relative;z-index:1;padding:72px 5vw 80px;max-width:700px}
+.tp-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);border-radius:100px;padding:6px 14px;margin-bottom:20px}
+.tp-pill-dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.tp-pill span{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.tp-hero h1{font-family:var(--display);font-size:clamp(52px,8vw,100px);line-height:.92;font-weight:700;text-transform:uppercase;margin-bottom:20px}
+.tp-hero h1 em{color:var(--red);font-style:normal}
+.tp-hero p{font-size:16px;font-weight:300;color:rgba(240,240,248,.7);line-height:1.75;max-width:520px;margin-bottom:20px}
+.tp-hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.btn-red{display:inline-flex;align-items:center;gap:9px;padding:14px 28px;background:var(--red);border-radius:12px;font-size:15px;font-weight:600;color:#000;transition:all .25s;border:none;cursor:pointer}
+.btn-red:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(245,197,24,.35)}
+.btn-outline{display:inline-flex;align-items:center;gap:9px;padding:14px 28px;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;font-size:15px;font-weight:600;color:rgba(255,255,255,.75);transition:all .25s;background:transparent;cursor:pointer}
+.btn-outline:hover{border-color:rgba(255,255,255,.5);color:#fff}
+
+/* ─── LIVE COUNTER BAR ────────────────────────── */
+.live-bar{display:flex;gap:20px;flex-wrap:wrap}
+.live-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);border-radius:100px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--text)}
+.live-chip .dot{width:8px;height:8px;background:#ff4444;border-radius:50%;animation:blink 1.2s ease-in-out infinite;flex-shrink:0}
+.live-chip .dot.green{background:#22c55e}
+.live-num{color:var(--red);font-family:var(--display);font-size:20px;font-weight:700;line-height:1}
+
+/* ─── COUNTDOWN ───────────────────────────────── */
+.countdown-section{background:linear-gradient(135deg,#0f0e00 0%,#1a1600 100%);border-top:1px solid rgba(245,197,24,.15);border-bottom:1px solid rgba(245,197,24,.15);padding:36px 5vw}
+.countdown-inner{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.countdown-label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.countdown-title{font-family:var(--display);font-size:clamp(22px,3vw,32px);font-weight:700;text-transform:uppercase;color:#fff}
+.countdown-title span{color:var(--red)}
+.countdown-units{display:flex;gap:12px}
+.cu{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);border-radius:12px;padding:12px 16px;text-align:center;min-width:68px}
+.cu-n{font-family:var(--display);font-size:38px;font-weight:700;color:#fff;line-height:1;display:block}
+.cu-l{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.cu-sep{font-family:var(--display);font-size:32px;font-weight:700;color:var(--red);align-self:center;margin-top:-8px}
+.countdown-cta{flex-shrink:0}
+
+/* ─── EVENT TIMELINE (path) ───────────────────── */
+.path-section{padding:80px 5vw;background:var(--card)}
+.container{max-width:1140px;margin:0 auto}
+.s-label{font-size:11px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.s-title{font-family:var(--display);font-size:clamp(36px,5vw,64px);font-weight:700;text-transform:uppercase;line-height:.95;margin-bottom:16px}
+.s-sub{font-size:15px;font-weight:300;color:var(--muted);line-height:1.75;max-width:540px;margin-bottom:52px}
+.path-track-wrap{position:relative;margin:0 -5vw}
+.path-track-wrap::before,.path-track-wrap::after{content:'';position:absolute;top:0;bottom:32px;width:40px;z-index:2;pointer-events:none}
+.path-track-wrap::before{left:0;background:linear-gradient(90deg,var(--card),transparent)}
+.path-track-wrap::after{right:0;background:linear-gradient(-90deg,var(--card),transparent)}
+.path-track{position:relative;display:flex;gap:0;overflow-x:auto;overflow-y:visible;padding:8px 5vw 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.path-track::-webkit-scrollbar{display:none}
+.path-track::before{content:'';position:absolute;top:44px;left:5vw;right:5vw;height:2px;background:linear-gradient(90deg,var(--red),rgba(245,197,24,.25));z-index:0;pointer-events:none}
+.path-step{flex:0 0 160px;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;padding:0 12px;cursor:pointer;scroll-snap-align:center}
+.path-scroll-hint{display:none;text-align:center;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;margin-bottom:-8px}
+.path-scroll-hint i{animation:hint-bounce 1.5s ease-in-out infinite}
+@keyframes hint-bounce{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+.path-node{width:72px;height:72px;border-radius:50%;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;font-weight:700;color:var(--muted);transition:all .35s;margin-bottom:12px;position:relative}
+.path-step.active .path-node,.path-step:hover .path-node{background:var(--red);border-color:var(--red);color:#000;box-shadow:0 0 32px rgba(245,197,24,.4)}
+.path-step.active .path-node::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(245,197,24,.3);animation:pulse-ring 2s ease-in-out infinite}
+@keyframes pulse-ring{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:0;transform:scale(1.25)}}
+.path-label{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);text-align:center;transition:color .3s;line-height:1.4}
+.path-step.active .path-label,.path-step:hover .path-label{color:var(--red)}
+/* step desc card */
+.step-desc{display:none;gap:24px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px}
+.step-desc.active-desc{display:flex}
+.step-desc-icon{font-size:48px;flex-shrink:0}
+.step-desc-body{flex:1}
+.step-desc-name{font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.step-desc-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.sdm{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:500}
+.sdm i{color:var(--red);font-size:11px}
+.step-desc-detail{font-size:14px;color:var(--muted);line-height:1.7}
+.step-desc-prize{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--red);margin-top:10px}
+
+/* ─── EVENT CARDS (plans grid) ────────────────── */
+.plans-section{padding:80px 5vw}
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;gap:0;transition:all .3s;position:relative;overflow:hidden}
+.plan-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border);transition:background .3s}
+.plan-card:hover,.plan-card.featured{border-color:rgba(245,197,24,.3)}
+.plan-card:hover::before,.plan-card.featured::before{background:var(--red)}
+.plan-card.featured{background:linear-gradient(160deg,#1a1808 0%,#111108 100%);border-color:rgba(245,197,24,.4)}
+.plan-card.wide{grid-column:span 2}
+.plan-badge{position:absolute;top:20px;right:20px;background:var(--red);color:#000;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:20px}
+.plan-icon{font-size:36px;margin-bottom:16px;line-height:1}
+.plan-level{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.plan-name{font-family:var(--display);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.plan-best{font-size:12px;color:var(--muted);margin-bottom:20px}
+.plan-price{font-family:var(--display);font-size:46px;font-weight:700;color:var(--red);line-height:1;margin-bottom:4px}
+.plan-price span{font-family:var(--font);font-size:14px;font-weight:400;color:var(--muted)}
+.plan-price-alt{font-size:12px;color:var(--muted);margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.plan-features{display:flex;flex-direction:column;gap:11px;margin-bottom:28px;flex:1}
+.pf{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(240,240,248,.75);line-height:1.5}
+.pf-dot{width:18px;height:18px;border-radius:50%;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pf-dot i{font-size:8px;color:var(--red)}
+.plan-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;background:rgba(245,197,24,.08);border:1.5px solid rgba(245,197,24,.25);border-radius:12px;font-size:14px;font-weight:600;color:var(--red);transition:all .25s;cursor:pointer;margin-top:auto;border:none}
+.plan-btn:hover{background:var(--red);color:#000}
+.plan-card.featured .plan-btn{background:var(--red);color:#000}
+.plan-card.featured .plan-btn:hover{background:var(--red2)}
+/* wide card inner */
+.wide-inner{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.wide-right{background:rgba(245,197,24,.05);border:1px solid rgba(245,197,24,.15);border-radius:14px;padding:20px}
+.wide-right-title{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.event-meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.em{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--muted);font-weight:500}
+.em i{color:var(--red);font-size:11px}
+.ci{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(240,240,248,.7)}
+.ci i{color:var(--red);margin-top:2px;font-size:11px;flex-shrink:0}
+.cert-includes{display:flex;flex-direction:column;gap:10px}
+
+/* ─── WHY COMPETE ─────────────────────────────── */
+.why-section{padding:80px 5vw;background:var(--card)}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:20px;overflow:hidden;margin-top:48px}
+.why-card{background:var(--card);padding:36px 28px;transition:background .25s;position:relative;overflow:hidden}
+.why-card:hover{background:var(--card2)}
+.why-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:transparent;transition:background .3s}
+.why-card:hover::after{background:var(--red)}
+.why-icon{width:52px;height:52px;border-radius:14px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.18);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+.why-title{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px}
+.why-text{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ─── HIGHLIGHTS TABS ─────────────────────────── */
+.curr-section{padding:80px 5vw}
+.curr-tabs{display:flex;gap:8px;margin:40px 0 32px;flex-wrap:wrap}
+.curr-tab{padding:10px 22px;border-radius:100px;border:1.5px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .25s;background:none}
+.curr-tab.active,.curr-tab:hover{border-color:var(--red);color:var(--red);background:rgba(245,197,24,.06)}
+.curr-content{display:none;animation:fadeUp .4s ease}
+.curr-content.active{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.curr-week{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.curr-week-label{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.curr-week-title{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:14px}
+.curr-topics{display:flex;flex-direction:column;gap:8px}
+.ct{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(240,240,248,.7)}
+.ct::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+/* winner cards */
+.winner-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;align-items:center;gap:16px}
+.winner-rank{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;font-weight:700;flex-shrink:0}
+.rank-1{background:var(--red);color:#000}
+.rank-2{background:#aaa;color:#000}
+.rank-3{background:#c96a1e;color:#fff}
+.winner-info{flex:1}
+.winner-name{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.winner-cat{font-size:12px;color:var(--muted)}
+.winner-event{font-size:12px;color:var(--red);font-weight:600;margin-top:2px}
+
+/* ─── FAQ ─────────────────────────────────────── */
+.faq-section{padding:80px 5vw;background:var(--card)}
+.faq-list{display:flex;flex-direction:column;gap:8px;margin-top:48px;max-width:800px}
+.faq-item{background:var(--card2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .25s}
+.faq-item.open{border-color:rgba(245,197,24,.3)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;cursor:pointer;gap:16px;font-size:15px;font-weight:500}
+.faq-q-icon{width:28px;height:28px;border-radius:50%;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;font-size:12px;color:var(--red)}
+.faq-item.open .faq-q-icon{background:var(--red);border-color:var(--red);color:#000;transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s}
+.faq-a-inner{padding:0 24px 20px;font-size:14px;color:var(--muted);line-height:1.8}
+.faq-item.open .faq-a{max-height:300px}
+
+/* ─── CTA ─────────────────────────────────────── */
+.cta-section{padding:100px 5vw;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(245,197,24,.1) 0%,transparent 70%),var(--dark);position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(245,197,24,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(245,197,24,.04) 1px,transparent 1px);background-size:48px 48px}
+.cta-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.cta-title{font-family:var(--display);font-size:clamp(44px,7vw,88px);font-weight:700;text-transform:uppercase;line-height:.9;margin-bottom:20px}
+.cta-title em{color:var(--red);font-style:normal}
+.cta-text{font-size:16px;font-weight:300;color:var(--muted);line-height:1.75;margin-bottom:36px}
+.cta-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+
+/* ─── MODAL ───────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px;width:100%;max-width:520px;position:relative;transform:scale(.95) translateY(16px);transition:transform .35s;max-height:90vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:none}
+.modal-x{position:absolute;top:16px;right:16px;width:36px;height:36px;background:var(--card2);border-radius:50%;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all .2s;border:1px solid var(--border)}
+.modal-x:hover{background:rgba(245,197,24,.15);color:var(--red)}
+.modal-label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.modal-title{font-family:var(--display);font-size:36px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
+.form-input,.form-select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--text);font-family:var(--font);transition:border .25s;outline:none}
+.form-input:focus,.form-select:focus{border-color:rgba(245,197,24,.4)}
+.form-select option{background:var(--card2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-submit{width:100%;padding:15px;background:var(--red);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:all .25s;margin-top:8px;font-family:var(--font)}
+.form-submit:hover{background:var(--red2);transform:translateY(-1px)}
+.form-success{display:none;text-align:center;padding:20px 0}
+.form-success-icon{font-size:48px;margin-bottom:12px}
+.form-success h3{font-family:var(--display);font-size:32px;text-transform:uppercase;margin-bottom:8px}
+.form-success p{color:var(--muted);font-size:14px}
+
+/* ─── FOOTER ──────────────────────────────────── */
+footer{background:var(--card);border-top:1px solid var(--border);padding:56px 5vw 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.f-logo{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:1px;margin-bottom:12px}
+.f-logo span{color:var(--red)}
+.f-about{font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:20px}
+.f-social{display:flex;gap:8px}
+.fsb{width:36px;height:36px;border-radius:9px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);transition:all .2s;text-decoration:none}
+.fsb:hover{background:var(--red);border-color:var(--red);color:#000}
+.f-heading{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.f-links{display:flex;flex-direction:column;gap:9px}
+.f-link{font-size:14px;color:rgba(240,240,248,.5);transition:color .2s;display:flex;align-items:center;gap:7px}
+.f-link:hover{color:var(--red)}
+.f-bottom{border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:12px}
+.f-bottom-links{display:flex;gap:16px}
+.f-bottom-link{color:var(--muted);transition:color .2s;cursor:pointer}
+.f-bottom-link:hover{color:var(--text)}
+
+/* ─── REVEAL ──────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.reveal.vis{opacity:1;transform:none}
+
+/* ─── TOAST ───────────────────────────────────── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid rgba(0,214,143,.4);color:#00d68f;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(60px);opacity:0;transition:all .35s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:none;opacity:1}
+
+/* ─── MOBILE ──────────────────────────────────── */
+@media(max-width:900px){
+  .plans-grid{grid-template-columns:1fr 1fr}
+  .plan-card.wide{grid-column:span 2}
+  .why-grid{grid-template-columns:1fr 1fr}
+  .curr-content.active{grid-template-columns:1fr}
+  .wide-inner{grid-template-columns:1fr}
+  .countdown-inner{flex-direction:column;align-items:flex-start;gap:20px}
+}
+@media(max-width:768px){
+  .nav-links,.nav-cta:not(.hamburger + .nav-cta){display:none}
+  .hamburger{display:flex}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  .plans-grid{grid-template-columns:1fr}
+  .plan-card.wide{grid-column:span 1}
+  .why-grid{grid-template-columns:1fr}
+  .path-step{flex:0 0 130px}
+  .path-scroll-hint{display:block}
+}
+@media(max-width:480px){
+  .footer-grid{grid-template-columns:1fr}
+  .tp-hero-btns{flex-direction:column}
+  .btn-red,.btn-outline{width:100%;justify-content:center}
+  .cta-btns{flex-direction:column;align-items:center}
+  .form-row{grid-template-columns:1fr}
+  .step-desc{flex-direction:column!important;gap:16px!important}
+  .step-desc .btn-red{width:100%;justify-content:center}
+  .countdown-units{gap:6px}
+  .cu{min-width:56px;padding:10px 12px}
+  .cu-n{font-size:30px}
+}
+
+/* === TNS UNIVERSAL NAV === */
+.tns-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;padding:0 20px;display:flex;align-items:center;gap:16px;transition:background .3s,border .3s}
+.tns-nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.tns-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.tns-nav-logo img{width:38px;height:38px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-nav-brand{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:#f0f0f8;line-height:1}
+.tns-nav-brand span{color:#f5c518}
+.tns-nav-links{display:flex;gap:2px;margin-left:auto}
+.tns-nav-links a{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;color:#7a7a9a;text-decoration:none;transition:all .2s}
+.tns-nav-links a:hover{color:#f0f0f8;background:rgba(255,255,255,.07)}
+.tns-nav-links a.tns-active{color:#f5c518;background:rgba(245,197,24,.08)}
+.tns-nav-auth{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
+.tns-btn-join{padding:9px 20px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .2s;white-space:nowrap;display:inline-block}
+.tns-btn-join:hover{background:#ffd84d}
+.tns-btn-signin{padding:9px 16px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-size:13px;font-weight:600;color:#f0f0f8;text-decoration:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;display:inline-block}
+.tns-btn-signin:hover{border-color:rgba(255,255,255,.4)}
+.tns-user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:#111118;border:1px solid rgba(255,255,255,.08);border-radius:100px;text-decoration:none;transition:border-color .2s;cursor:pointer;flex-shrink:0}
+.tns-user-pill:hover{border-color:rgba(245,197,24,.4)}
+.tns-u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-family:'Teko',sans-serif;font-size:13px;font-weight:700;color:#000;flex-shrink:0;overflow:hidden;border:2px solid #f5c518}
+.tns-u-av img{width:100%;height:100%;object-fit:cover}
+.tns-uname{font-size:13px;font-weight:600;color:#f0f0f8}
+.tns-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;flex-shrink:0}
+.tns-ham span{width:22px;height:2px;background:#f0f0f8;border-radius:2px;transition:all .3s;display:block}
+.tns-ham.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.tns-ham.open span:nth-child(2){opacity:0}
+.tns-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.tns-mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.99);backdrop-filter:blur(24px);z-index:199;padding:20px 16px;flex-direction:column;gap:4px;overflow-y:auto}
+.tns-mob-nav.open{display:flex}
+.tns-mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:#7a7a9a;text-decoration:none;border:1px solid transparent;transition:all .2s}
+.tns-mob-nav a:hover{color:#f0f0f8;background:#111118;border-color:rgba(255,255,255,.07)}
+.tns-mob-nav a.tns-active{color:#f5c518;background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.15)}
+.tns-mob-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.tns-mob-join{display:block;padding:15px;background:#f5c518;border-radius:12px;font-size:15px;font-weight:700;color:#000;text-align:center;text-decoration:none;margin-top:8px}
+.tns-mob-prof{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);margin-top:8px;text-decoration:none;cursor:pointer}
+.tns-mob-prof-name{font-size:15px;font-weight:700;color:#f0f0f8}
+.tns-mob-prof-sub{font-size:12px;color:#7a7a9a}
+.tns-mob-signout{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#7a7a9a;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:6px;display:block;text-align:center}
+@media(max-width:768px){.tns-nav-links,.tns-nav-auth{display:none}.tns-ham{display:flex}}
+
+/* === TNS UNIVERSAL FOOTER === */
+.tns-footer{background:#0a0a12;border-top:1px solid rgba(255,255,255,.06);padding:56px 20px 0;margin-top:80px}
+.tns-fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px}
+.tns-fb{display:flex;flex-direction:column;gap:14px}
+.tns-fl{display:flex;align-items:center;gap:12px}
+.tns-fl img{width:44px;height:44px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-fn{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#f0f0f8}
+.tns-fn span{color:#f5c518}
+.tns-fe{font-size:11px;color:#7a7a9a;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.tns-fd{font-size:13px;color:#7a7a9a;line-height:1.7;max-width:260px}
+.tns-fs{display:flex;gap:8px;flex-wrap:wrap}
+.tns-fs a{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#7a7a9a;font-size:15px;transition:all .2s;text-decoration:none}
+.tns-fs a:hover{background:#f5c518;border-color:#f5c518;color:#000}
+.tns-fct{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7a7a9a;margin-bottom:16px}
+.tns-fc{display:flex;flex-direction:column;gap:10px}
+.tns-fc a{font-size:14px;color:rgba(240,240,248,.45);text-decoration:none;transition:color .2s}
+.tns-fc a:hover{color:#f5c518}
+.tns-fc span{font-size:13px;color:rgba(240,240,248,.35);display:flex;align-items:center;gap:6px}
+.tns-fc i{font-size:12px;color:#f5c518}
+.tns-fbot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7a7a9a;max-width:1100px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.tns-fbot a{color:#7a7a9a;text-decoration:none;transition:color .2s}
+.tns-fbot a:hover{color:#f5c518}
+@media(max-width:768px){.tns-fi{grid-template-columns:1fr 1fr;gap:28px}.tns-fb{grid-column:span 2}.tns-footer{margin-top:40px}}
+@media(max-width:480px){.tns-fi{grid-template-columns:1fr}.tns-fb{grid-column:span 1}.tns-fbot{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav class="tns-nav" id="tns-nav">
+  <a href="index.html" class="tns-nav-logo">
+    <img src="TNS-Logo-6.png" alt="TNS">
+    <div class="tns-nav-brand">TNS<span> AW</span></div>
+  </a>
+  <div class="tns-nav-links">
+    <a href="index.html">Home</a>
+    <a href="training.html">Training</a>
+    <a href="events.html" class="tns-active">Events</a>
+    <a href="community.html">Community</a>
+    <a href="tnarmy.html">TNS Army</a>
+  </div>
+  <div class="tns-nav-auth" id="tns-nav-auth">
+    <a href="auth.html" class="tns-btn-signin">Sign In</a>
+    <a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a>
+  </div>
+  <button class="tns-ham" id="tns-ham" onclick="tnsToggleMob()" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="tns-mob-nav" id="tns-mob-nav">
+  <a href="index.html" onclick="tnsCloseMob()">Home</a>
+  <a href="training.html" onclick="tnsCloseMob()">Training</a>
+  <a href="events.html" class="tns-active" onclick="tnsCloseMob()">Events</a>
+  <a href="community.html" onclick="tnsCloseMob()">Community</a>
+  <a href="tnarmy.html" onclick="tnsCloseMob()">TNS Army</a>
+  <div class="tns-mob-sep"></div>
+  <div id="tns-mob-auth"><a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a></div>
+</div>
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="tp-hero">
+  <div class="tp-hero-bg">
+    <img src="https://tnsarmwrestling.com/wp-content/uploads/2023/07/TNS-Arm-wrestling-7-scaled.jpg" alt="TNS Events" id="hero-img">
+  </div>
+  <div class="tp-hero-content">
+    <div class="tp-pill">
+      <div class="tp-pill-dot"></div>
+      <span>Pune's #1 Arm Wrestling Events</span>
+    </div>
+    <h1>UPCOMING<br><em>EVENTS</em></h1>
+    <p>Step on the table. Compete with the best. Join TNS events across Pune — open to all weight categories, all skill levels.</p>
+    <div class="tp-hero-btns">
+      <button class="btn-red" onclick="openModal()"><i class="fa-solid fa-bolt"></i> Register Now</button>
+      <a href="#events" class="btn-outline"><i class="fa-solid fa-calendar-days"></i> View Events</a>
+    </div>
+    <div class="live-bar">
+      <div class="live-chip"><span class="dot"></span> Live Registrations <span class="live-num" id="athlete-count">120</span>+ Athletes</div>
+      <div class="live-chip"><span class="dot green"></span> Next Event <span style="color:var(--red);margin-left:2px">Apr 11</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- COUNTDOWN -->
+<div class="countdown-section">
+  <div class="countdown-inner">
+    <div>
+      <div class="countdown-label">Next Event</div>
+      <div class="countdown-title">Multifit Showdown · <span>Magarpatta, Pune</span></div>
+    </div>
+    <div class="countdown-units">
+      <div class="cu"><span class="cu-n" id="cd-days">00</span><div class="cu-l">Days</div></div>
+      <div class="cu-sep">:</div>
+      <div class="cu"><span class="cu-n" id="cd-hrs">00</span><div class="cu-l">Hrs</div></div>
+      <div class="cu-sep">:</div>
+      <div class="cu"><span class="cu-n" id="cd-min">00</span><div class="cu-l">Min</div></div>
+      <div class="cu-sep">:</div>
+      <div class="cu"><span class="cu-n" id="cd-sec">00</span><div class="cu-l">Sec</div></div>
+    </div>
+    <div class="countdown-cta">
+      <button class="btn-red" onclick="openModal('Multifit Showdown — April 11, 2026')"><i class="fa-solid fa-bolt"></i> Register Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT TIMELINE -->
+<section class="path-section">
+  <div class="container">
+    <div class="s-label reveal">2026 Season</div>
+    <h2 class="s-title reveal">EVENT<br><span style="color:var(--red)">TIMELINE</span></h2>
+    <p class="s-sub reveal">Four major events this season. Pick your battle.</p>
+    <div class="path-track-wrap">
+      <div class="path-track reveal">
+        <div class="path-step active" onclick="setStep(0)">
+          <div class="path-node">⚡</div>
+          <div class="path-label">Multifit<br>Showdown</div>
+        </div>
+        <div class="path-step" onclick="setStep(1)">
+          <div class="path-node">🏆</div>
+          <div class="path-label">Pune<br>Championship</div>
+        </div>
+        <div class="path-step" onclick="setStep(2)">
+          <div class="path-node">🎓</div>
+          <div class="path-label">College<br>Battle</div>
+        </div>
+        <div class="path-step" onclick="setStep(3)">
+          <div class="path-node">🇮🇳</div>
+          <div class="path-label">National<br>Qualifier</div>
+        </div>
+      </div>
+    </div>
+    <div class="path-scroll-hint"><i class="fa-solid fa-arrow-right"></i>&nbsp; Swipe to explore events &nbsp;<i class="fa-solid fa-arrow-right"></i></div>
+
+    <!-- Event Detail Cards -->
+    <div id="step-descs">
+
+      <div class="step-desc active-desc" id="step-0">
+        <div class="step-desc-icon">⚡</div>
+        <div class="step-desc-body">
+          <div class="step-desc-name">Multifit Showdown</div>
+          <div class="step-desc-meta">
+            <span class="sdm"><i class="fa-solid fa-calendar"></i> April 11, 2026 · 12:00 PM</span>
+            <span class="sdm"><i class="fa-solid fa-location-dot"></i> Multifit Gym, Magarpatta, Pune</span>
+            <span class="sdm"><i class="fa-solid fa-indian-rupee-sign"></i> Entry: ₹299 per category</span>
+          </div>
+          <div class="step-desc-detail">Open to all weight categories. Refereed matches, certified officials. Our first official event at MultiFit Magarpatta — don't miss it.</div>
+          <div class="step-desc-prize"><i class="fa-solid fa-trophy"></i> Prize Pool: ₹15,000+ in medals & trophies</div>
+        </div>
+        <button class="btn-red" style="flex-shrink:0;white-space:nowrap" onclick="openModal('Multifit Showdown — April 11, 2026')"><i class="fa-solid fa-bolt"></i> Register</button>
+      </div>
+
+      <div class="step-desc" id="step-1">
+        <div class="step-desc-icon">🏆</div>
+        <div class="step-desc-body">
+          <div class="step-desc-name">Pune Championship</div>
+          <div class="step-desc-meta">
+            <span class="sdm"><i class="fa-solid fa-calendar"></i> June 2026 · TBD</span>
+            <span class="sdm"><i class="fa-solid fa-location-dot"></i> Decathlon, Pune</span>
+            <span class="sdm"><i class="fa-solid fa-indian-rupee-sign"></i> Entry: ₹499 per category</span>
+          </div>
+          <div class="step-desc-detail">The biggest arm wrestling event of the year in Pune. Multiple weight classes, certified referees, live commentary, and a massive crowd. Compete for the city title.</div>
+          <div class="step-desc-prize"><i class="fa-solid fa-trophy"></i> Prize Pool: ₹50,000+ cash & trophies</div>
+        </div>
+        <button class="btn-red" style="flex-shrink:0;white-space:nowrap" onclick="openModal('Pune Championship — June 2026')"><i class="fa-solid fa-bolt"></i> Register</button>
+      </div>
+
+      <div class="step-desc" id="step-2">
+        <div class="step-desc-icon">🎓</div>
+        <div class="step-desc-body">
+          <div class="step-desc-name">College Battle</div>
+          <div class="step-desc-meta">
+            <span class="sdm"><i class="fa-solid fa-calendar"></i> August 2026 · TBD</span>
+            <span class="sdm"><i class="fa-solid fa-location-dot"></i> Pune University Campus</span>
+            <span class="sdm"><i class="fa-solid fa-indian-rupee-sign"></i> Entry: FREE for students</span>
+          </div>
+          <div class="step-desc-detail">Exclusive inter-college arm wrestling tournament. Open to all Pune college students. Represent your institution and claim the title of strongest campus.</div>
+          <div class="step-desc-prize"><i class="fa-solid fa-trophy"></i> Prize Pool: Trophies, medals & TNS merchandise</div>
+        </div>
+        <button class="btn-red" style="flex-shrink:0;white-space:nowrap" onclick="openModal('College Battle — August 2026')"><i class="fa-solid fa-bolt"></i> Register</button>
+      </div>
+
+      <div class="step-desc" id="step-3">
+        <div class="step-desc-icon">🇮🇳</div>
+        <div class="step-desc-body">
+          <div class="step-desc-name">National Qualifier</div>
+          <div class="step-desc-meta">
+            <span class="sdm"><i class="fa-solid fa-calendar"></i> October 2026 · TBD</span>
+            <span class="sdm"><i class="fa-solid fa-location-dot"></i> Venue TBA, Pune</span>
+            <span class="sdm"><i class="fa-solid fa-indian-rupee-sign"></i> Entry: ₹799 per category</span>
+          </div>
+          <div class="step-desc-detail">The top performers from TNS 2026 events earn the chance to qualify for the National Arm Wrestling Circuit. This is where legends are made. Are you ready?</div>
+          <div class="step-desc-prize"><i class="fa-solid fa-trophy"></i> Prize Pool: National qualification + ₹1,00,000+</div>
+        </div>
+        <button class="btn-red" style="flex-shrink:0;white-space:nowrap" onclick="openModal('National Qualifier — October 2026')"><i class="fa-solid fa-bolt"></i> Register</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- EVENT CARDS -->
+<section class="plans-section" id="events">
+  <div class="container">
+    <div class="s-label reveal">Upcoming</div>
+    <h2 class="s-title reveal">ALL<br><span style="color:var(--red)">EVENTS</span></h2>
+    <p class="s-sub reveal">Register before slots fill up. All weight categories welcome.</p>
+
+    <div class="plans-grid">
+
+      <!-- MULTIFIT SHOWDOWN -->
+      <div class="plan-card featured reveal">
+        <div class="plan-badge">🔥 Next Up</div>
+        <div class="plan-icon">⚡</div>
+        <div class="plan-level">April 11, 2026</div>
+        <div class="plan-name">Multifit<br>Showdown</div>
+        <div class="plan-best">Multifit Gym · Magarpatta, Pune · 12:00 PM</div>
+        <div class="plan-price">₹299<span>/category</span></div>
+        <div class="plan-price-alt">Open registration · All weight classes</div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>All weight categories — men & women</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Certified TNS referees on the table</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Live photography & media coverage</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Trophies & medals for all podium spots</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Beginners welcome — no experience needed</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Multifit Showdown — April 11, 2026')">Register Now <i class="fa-solid fa-bolt"></i></button>
+      </div>
+
+      <!-- PUNE CHAMPIONSHIP -->
+      <div class="plan-card reveal">
+        <div class="plan-badge" style="background:var(--card2);color:var(--red);border:1px solid rgba(245,197,24,.3)">🏆 Main Event</div>
+        <div class="plan-icon">🏆</div>
+        <div class="plan-level">June 2026</div>
+        <div class="plan-name">Pune<br>Championship</div>
+        <div class="plan-best">Decathlon Pune · Date TBA</div>
+        <div class="plan-price">₹499<span>/category</span></div>
+        <div class="plan-price-alt">Registrations opening soon</div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Pune's biggest arm wrestling event</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Multi-round elimination brackets</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Live commentary & crowd atmosphere</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>₹50,000+ prize pool</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Pune Championship — June 2026')">Notify Me <i class="fa-solid fa-bell"></i></button>
+      </div>
+
+      <!-- COLLEGE BATTLE -->
+      <div class="plan-card reveal">
+        <div class="plan-badge" style="background:#22c55e;color:#000">🎓 Students Free</div>
+        <div class="plan-icon">🎓</div>
+        <div class="plan-level">August 2026</div>
+        <div class="plan-name">College<br>Battle</div>
+        <div class="plan-best">Pune University Campus · Date TBA</div>
+        <div class="plan-price" style="font-size:36px">FREE<span>&nbsp;for students</span></div>
+        <div class="plan-price-alt">Inter-college · Represent your campus</div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Open to all Pune college students</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Team & individual categories</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Trophies, medals & TNS merchandise</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>College championship title on the line</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('College Battle — August 2026')">Notify Me <i class="fa-solid fa-bell"></i></button>
+      </div>
+
+      <!-- NATIONAL QUALIFIER — wide card -->
+      <div class="plan-card wide reveal" style="background:linear-gradient(135deg,#0f0f00 0%,#1a1500 100%);border-color:rgba(245,197,24,.35)">
+        <div class="plan-badge" style="background:linear-gradient(90deg,var(--red),var(--red2))">🇮🇳 National Level</div>
+        <div class="wide-inner">
+          <div>
+            <div class="plan-icon">🇮🇳</div>
+            <div class="plan-level">October 2026</div>
+            <div class="plan-name">National<br>Qualifier</div>
+            <div class="plan-best">Venue TBA, Pune · The biggest stage</div>
+            <div class="plan-price">₹799<span>/category</span></div>
+            <div class="plan-price-alt">Qualify for India's national circuit</div>
+            <button class="plan-btn" onclick="openModal('National Qualifier — October 2026')" style="background:var(--red);color:#000;border:none;margin-top:8px">Notify Me <i class="fa-solid fa-bell"></i></button>
+          </div>
+          <div class="wide-right">
+            <div class="wide-right-title">What's at Stake</div>
+            <div class="cert-includes">
+              <div class="ci"><i class="fa-solid fa-star"></i>National Arm Wrestling Circuit qualification</div>
+              <div class="ci"><i class="fa-solid fa-star"></i>₹1,00,000+ total prize pool</div>
+              <div class="ci"><i class="fa-solid fa-star"></i>TNS Championship belt for category winners</div>
+              <div class="ci"><i class="fa-solid fa-star"></i>National ranking points</div>
+              <div class="ci"><i class="fa-solid fa-star"></i>Certified referees & official ruleset</div>
+              <div class="ci"><i class="fa-solid fa-star"></i>Full media coverage & livestream</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY COMPETE -->
+<section class="why-section">
+  <div class="container">
+    <div class="s-label reveal">Why TNS Events</div>
+    <h2 class="s-title reveal">WHY COMPETE<br><span style="color:var(--red)">WITH US</span></h2>
+    <div class="why-grid reveal">
+      <div class="why-card">
+        <div class="why-icon">🎯</div>
+        <div class="why-title">Professional Setup</div>
+        <div class="why-text">Official arm wrestling tables, certified equipment, and a proper competition environment. Every event is run to international standards.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">⚖️</div>
+        <div class="why-title">Fair Matches</div>
+        <div class="why-text">Weight categories, certified referees, and strict rule enforcement ensure every match is clean, fair, and decided on pure skill.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📸</div>
+        <div class="why-title">Media Coverage</div>
+        <div class="why-text">Every event is photographed and filmed. Your victories live forever — shared across TNS social channels and community platforms.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🤝</div>
+        <div class="why-title">Strong Community</div>
+        <div class="why-text">500+ athletes, a tight-knit crew, and a culture of respect. Win or lose, you leave every TNS event with new friends and fierce rivals.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EVENT HIGHLIGHTS -->
+<section class="curr-section">
+  <div class="container">
+    <div class="s-label reveal">Look Back</div>
+    <h2 class="s-title reveal">EVENT<br><span style="color:var(--red)">HIGHLIGHTS</span></h2>
+    <p class="s-sub reveal">Relive the best moments from past TNS competitions.</p>
+    <div class="curr-tabs reveal">
+      <button class="curr-tab active" onclick="switchTab('past')">Past Events</button>
+      <button class="curr-tab" onclick="switchTab('winners')">Winners</button>
+      <button class="curr-tab" onclick="switchTab('highlights')">Highlights</button>
+    </div>
+
+    <div class="curr-content active" id="tab-past">
+      <div class="curr-week">
+        <div class="curr-week-label">Dec 2025</div>
+        <div class="curr-week-title">TNS Winter Clash</div>
+        <div class="curr-topics">
+          <div class="ct">Venue: Decathlon Pune · 80+ athletes</div>
+          <div class="ct">5 weight categories · Men & Women</div>
+          <div class="ct">Prize pool: ₹30,000 distributed</div>
+          <div class="ct">Youngest champion: 17 years old</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">Sep 2025</div>
+        <div class="curr-week-title">Pune Open 2025</div>
+        <div class="curr-topics">
+          <div class="ct">Venue: NIBM Sports Hall · 120+ athletes</div>
+          <div class="ct">6 weight categories — largest TNS event</div>
+          <div class="ct">Prize pool: ₹55,000 total</div>
+          <div class="ct">Featured in local media & Instagram reels</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">May 2025</div>
+        <div class="curr-week-title">TNS Spring Showdown</div>
+        <div class="curr-topics">
+          <div class="ct">Venue: Decathlon · 60+ athletes</div>
+          <div class="ct">First official women's category added</div>
+          <div class="ct">Livestreamed for the first time</div>
+          <div class="ct">Prize pool: ₹20,000</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">Jan 2025</div>
+        <div class="curr-week-title">New Year Rumble</div>
+        <div class="curr-topics">
+          <div class="ct">Venue: TNS Gym, NIBM · 45 athletes</div>
+          <div class="ct">3 weight categories · Quick format</div>
+          <div class="ct">Opening event of the 2025 season</div>
+          <div class="ct">Prize pool: ₹10,000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="curr-content" id="tab-winners">
+      <div class="winner-card">
+        <div class="winner-rank rank-1">1</div>
+        <div class="winner-info">
+          <div class="winner-name">Rohit Sharma</div>
+          <div class="winner-cat">85kg Category · Men's Open</div>
+          <div class="winner-event">Pune Open 2025</div>
+        </div>
+        <div style="font-size:24px">🥇</div>
+      </div>
+      <div class="winner-card">
+        <div class="winner-rank rank-1">1</div>
+        <div class="winner-info">
+          <div class="winner-name">Priya Desai</div>
+          <div class="winner-cat">60kg Category · Women's Open</div>
+          <div class="winner-event">TNS Winter Clash 2025</div>
+        </div>
+        <div style="font-size:24px">🥇</div>
+      </div>
+      <div class="winner-card">
+        <div class="winner-rank rank-2">2</div>
+        <div class="winner-info">
+          <div class="winner-name">Akash More</div>
+          <div class="winner-cat">75kg Category · Men's Open</div>
+          <div class="winner-event">Pune Open 2025</div>
+        </div>
+        <div style="font-size:24px">🥈</div>
+      </div>
+      <div class="winner-card">
+        <div class="winner-rank rank-3">3</div>
+        <div class="winner-info">
+          <div class="winner-name">Suraj Patil</div>
+          <div class="winner-cat">100kg+ Category · Men's Open</div>
+          <div class="winner-event">TNS Spring Showdown 2025</div>
+        </div>
+        <div style="font-size:24px">🥉</div>
+      </div>
+    </div>
+
+    <div class="curr-content" id="tab-highlights">
+      <div class="curr-week">
+        <div class="curr-week-label">Best Moments</div>
+        <div class="curr-week-title">Unforgettable Pulls</div>
+        <div class="curr-topics">
+          <div class="ct">Epic 3-match final at Pune Open 2025</div>
+          <div class="ct">First-ever women's division champion crowned</div>
+          <div class="ct">17-year-old upset win in men's 75kg</div>
+          <div class="ct">500+ crowd at the New Year Rumble final</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">By The Numbers</div>
+        <div class="curr-week-title">2025 Season Stats</div>
+        <div class="curr-topics">
+          <div class="ct">305 total athletes competed across all events</div>
+          <div class="ct">4 major tournaments held in Pune</div>
+          <div class="ct">₹1,15,000+ total prize money distributed</div>
+          <div class="ct">8 cities represented at Pune Open 2025</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">Social Reach</div>
+        <div class="curr-week-title">Community Growth</div>
+        <div class="curr-topics">
+          <div class="ct">Event reels hit 200K+ views on Instagram</div>
+          <div class="ct">10+ national media mentions</div>
+          <div class="ct">TNS community crossed 500 registered members</div>
+          <div class="ct">3 athletes selected for national-level exposure</div>
+        </div>
+      </div>
+      <div class="curr-week">
+        <div class="curr-week-label">2026 Goals</div>
+        <div class="curr-week-title">What's Coming</div>
+        <div class="curr-topics">
+          <div class="ct">National Qualifier — first time in Pune</div>
+          <div class="ct">500+ athletes target for 2026 season</div>
+          <div class="ct">Official livestreaming for all major events</div>
+          <div class="ct">Partnership with MultiFit for venue hosting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <div class="s-label reveal">Got Questions?</div>
+    <h2 class="s-title reveal">EVENTS<br><span style="color:var(--red)">FAQ</span></h2>
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          How do I register for an event?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Click any "Register Now" button on this page to fill out the registration form. You can also reach us directly on WhatsApp at +91 73878 78771. We'll confirm your slot and share event details.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What weight categories are available?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">We run categories for men and women across multiple weight classes: Under 60kg, 60–70kg, 70–80kg, 80–90kg, 90–100kg, and 100kg+. Exact categories may vary per event — check the specific event for details.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can beginners compete? Do I need experience?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely yes! TNS events are open to everyone — from first-timers to experienced competitors. We have beginner-friendly divisions and our referees walk new competitors through the rules before their match.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What are the entry fees and rules?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Entry fees vary per event (₹299–₹799 per category). All events follow official WAF (World Armwrestling Federation) rules. A copy of the rules is shared upon registration. College Battle is free for students.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What should I bring on event day?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Bring a valid ID, confirmation of registration, and comfortable sportswear. Wrist wraps are allowed. No rings or metal jewellery during matches. Arrive 30 minutes before your category starts for weigh-in.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I compete in multiple weight categories?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">You can only compete in your official weight category, which is verified at weigh-in on event day. If you fall within the range of two categories, you may request to compete in the heavier one at the organiser's discretion.</div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-title">READY TO<br><em>COMPETE?</em></div>
+    <p class="cta-text">Don't just watch — get on the table. Register for the next TNS event and show Pune what you're made of.</p>
+    <div class="cta-btns">
+      <button class="btn-red" onclick="openModal()"><i class="fa-solid fa-bolt"></i> Register Now</button>
+      <a href="https://wa.me/917387878771" target="_blank" class="btn-outline"><i class="fa-brands fa-whatsapp"></i> WhatsApp Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="tns-footer">
+  <div class="tns-fi">
+    <div class="tns-fb">
+      <div class="tns-fl"><img src="TNS-Logo-6.png" alt="TNS"><div><div class="tns-fn">TNS<span> AW</span></div><div class="tns-fe">Est. 2017 · Pune</div></div></div>
+      <p class="tns-fd">Pune's first and premier arm wrestling club. Train. Compete. Dominate.</p>
+      <div class="tns-fs">
+        <a href="https://instagram.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://youtube.com/@tnsarmwrestling" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://facebook.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://linkedin.com/company/tns-arm-wrestling" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="https://wa.me/917387878771" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+    <div><div class="tns-fct">Pages</div><div class="tns-fc"><a href="index.html">Home</a><a href="training.html">Training</a><a href="events.html">Events</a><a href="community.html">Community</a><a href="tnarmy.html">TNS Army</a></div></div>
+    <div><div class="tns-fct">Account</div><div class="tns-fc"><a href="auth.html">Sign In</a><a href="auth.html?mode=register">Join TNS</a><a href="profile.html">My Profile</a><a href="profile.html?tab=history">My Payments</a></div></div>
+    <div><div class="tns-fct">Contact</div><div class="tns-fc"><span><i class="fa-solid fa-location-dot"></i> NIBM Road, Pune</span><span><i class="fa-brands fa-whatsapp"></i><a href="https://wa.me/917387878771">+91 73878 78771</a></span><span><i class="fa-solid fa-envelope"></i><a href="mailto:contact@tnsarmwrestling.com">contact@...</a></span></div></div>
+  </div>
+  <div class="tns-fbot"><span>© 2024 TNS Arm Wrestling. All rights reserved.</span><div style="display:flex;gap:16px"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div></div>
+</footer>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <button class="modal-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-form-wrap">
+      <div class="modal-label">TNS Events</div>
+      <div class="modal-title">Register Now</div>
+      <div class="modal-sub">Fill in your details — we'll confirm your slot within 24 hours.</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="f-name" placeholder="Your full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="f-email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone / WhatsApp</label>
+          <input class="form-input" type="tel" id="f-phone" placeholder="+91 XXXXX XXXXX">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Event</label>
+        <select class="form-select" id="f-program">
+          <option value="">-- Select an event --</option>
+          <option>Multifit Showdown — April 11, 2026</option>
+          <option>Pune Championship — June 2026</option>
+          <option>College Battle — August 2026</option>
+          <option>National Qualifier — October 2026</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Weight Category</label>
+        <select class="form-select" id="f-weight">
+          <option value="">-- Select your weight class --</option>
+          <option>Under 60kg</option>
+          <option>60–70kg</option>
+          <option>70–80kg</option>
+          <option>80–90kg</option>
+          <option>90–100kg</option>
+          <option>100kg+</option>
+        </select>
+      </div>
+      <button class="form-submit" onclick="submitForm()"><i class="fa-solid fa-bolt"></i> Confirm Registration</button>
+    </div>
+    <div class="form-success" id="form-success">
+      <div class="form-success-icon">🏆</div>
+      <h3>You're In!</h3>
+      <p>Registration received. We'll confirm your slot via WhatsApp or email within 24 hours. See you on the table!</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── TICKER ────────────────────────────────────
+const tickItems = [
+  '⚡ Multifit Showdown · Magarpatta · April 11, 2026 · 12:00 PM',
+  '🏆 All weight categories welcome — register now',
+  '💪 Pune\'s First Arm Wrestling Club — Est. 2017',
+  '🤝 Official Decathlon & MultiFit Partner',
+  '📍 TNS GYM, NIBM Road, Pune',
+  '🔥 Compete · Win · Dominate',
+];
+const doubled=[...tickItems,...tickItems];
+document.getElementById('ticker').innerHTML=doubled.map(t=>`<div class="ticker-item">${t}<span class="ticker-sep">✦</span></div>`).join('');
+
+// ── NAV SCROLL ────────────────────────────────
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('stuck',scrollY>40),{passive:true});
+
+// ── HAMBURGER ─────────────────────────────────
+function toggleMenu(){
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('mobile-nav').classList.toggle('open');
+  document.body.style.overflow=document.getElementById('mobile-nav').classList.contains('open')?'hidden':'';
+}
+function closeMenu(){
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('mobile-nav').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── HERO BG CYCLE ─────────────────────────────
+const BASE='https://tnsarmwrestling.com/wp-content/uploads/2023/07';
+const heroImgs=[`${BASE}/TNS-Arm-wrestling-7-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-12-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-9-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-14-scaled.jpg`];
+let hi=0;
+setInterval(()=>{
+  const el=document.getElementById('hero-img');
+  el.style.transition='opacity .8s';el.style.opacity='0';
+  hi=(hi+1)%heroImgs.length;
+  setTimeout(()=>{el.src=heroImgs[hi];el.style.opacity='1';},800);
+},5500);
+
+// ── LIVE ATHLETE COUNTER ──────────────────────
+let liveCount=120;
+setInterval(()=>{
+  if(Math.random()<0.3){
+    liveCount+=Math.floor(Math.random()*3)+1;
+    document.getElementById('athlete-count').textContent=liveCount;
+  }
+},4000);
+
+// ── COUNTDOWN TIMER ───────────────────────────
+function updateCountdown(){
+  const target=new Date('2026-04-11T12:00:00+05:30');
+  const now=new Date();
+  const diff=target-now;
+  if(diff<=0){
+    document.getElementById('cd-days').textContent='00';
+    document.getElementById('cd-hrs').textContent='00';
+    document.getElementById('cd-min').textContent='00';
+    document.getElementById('cd-sec').textContent='00';
+    return;
+  }
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  document.getElementById('cd-days').textContent=String(d).padStart(2,'0');
+  document.getElementById('cd-hrs').textContent=String(h).padStart(2,'0');
+  document.getElementById('cd-min').textContent=String(m).padStart(2,'0');
+  document.getElementById('cd-sec').textContent=String(s).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown,1000);
+
+// ── EVENT TIMELINE ────────────────────────────
+function setStep(n){
+  document.querySelectorAll('.path-step').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.step-desc').forEach(d=>{d.classList.remove('active-desc');d.style.display='none';});
+  const active=document.getElementById('step-'+n);
+  if(active){active.style.display='flex';active.classList.add('active-desc');}
+}
+
+// ── HIGHLIGHT TABS ────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.curr-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.curr-content').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── FAQ ───────────────────────────────────────
+function toggleFaq(el){
+  const item=el.parentElement;
+  const wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen)item.classList.add('open');
+}
+
+// ── MODAL ─────────────────────────────────────
+function openModal(event_name=''){
+  document.getElementById('form-success').style.display='none';
+  document.getElementById('modal-form-wrap').style.display='block';
+  if(event_name)document.getElementById('f-program').value=event_name;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('modal-overlay'))closeModal();
+}
+document.addEventListener('keydown',e=>e.key==='Escape'&&closeModal());
+
+function submitForm(){
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const prog=document.getElementById('f-program').value;
+  const weight=document.getElementById('f-weight').value;
+  if(!name||!phone||!prog||!weight){showToast('⚠️ Please fill in all required fields.');return;}
+  document.getElementById('modal-form-wrap').style.display='none';
+  document.getElementById('form-success').style.display='block';
+  showToast('✅ Registration confirmed!');
+}
+
+// ── TOAST ─────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── SCROLL REVEAL ─────────────────────────────
+const ro=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('vis')),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+</script>
+
+// ── TNS PAYMENT INTEGRATION ──────────────────
+function tnsRegisterEvent(eventName, amount, eventId){
+  const user = typeof TNS_DB !== 'undefined' ? TNS_DB.getCurrentUser() : null;
+  if(!user){
+    if(confirm('Sign in to register and pay for this event. Go to sign in?')){
+      window.location.href = 'auth.html?redirect=events.html';
+    }
+    return;
+  }
+  if(TNS_DB.isRegistered(eventId)){
+    alert('You are already registered for this event! Check your profile for receipt.');
+    return;
+  }
+  showEventPaymentModal(eventName, amount, eventId);
+}
+
+function showEventPaymentModal(eventName, amount, eventId){
+  const settings = TNS_DB.getSettings();
+  const upiId = settings.upiId || 'tnsarmwrestling@upi';
+  const upiLink = `upi://pay?pa=${upiId}&pn=TNS+Arm+Wrestling&am=${amount}&cu=INR&tn=${encodeURIComponent('TNS Event: ' + eventName)}`;
+
+  const existing = document.getElementById('tns-payment-overlay');
+  if(existing) existing.remove();
+
+  const user = TNS_DB.getCurrentUser();
+  const txnRes = TNS_DB.createTransaction({ type:'event', itemName: eventName, itemId: eventId, amount });
+  const txnId = txnRes.ok ? txnRes.txn.id : null;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tns-payment-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="background:#111118;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:440px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(249,115,22,.1));padding:24px 24px 20px;border-bottom:1px solid rgba(255,255,255,.07)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#f5c518">EVENT REGISTRATION</div>
+          <button onclick="document.getElementById('tns-payment-overlay').remove()" style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:#f0f0f8;font-size:13px">✕</button>
+        </div>
+        <div style="font-family:Teko,sans-serif;font-size:28px;font-weight:700;color:#f0f0f8;line-height:1.1;margin-bottom:4px">${eventName}</div>
+        <div style="font-family:Teko,sans-serif;font-size:44px;font-weight:700;color:#f5c518">₹${amount.toLocaleString()}</div>
+        <div style="font-size:12px;color:#7a7a9a">Registering as: ${user.name} (@${user.username})</div>
+      </div>
+      <div style="padding:20px">
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7a7a9a;margin-bottom:8px">Pay via UPI</div>
+          <div style="font-size:17px;font-weight:700;color:#f0f0f8;margin-bottom:10px">${upiId}</div>
+          <a href="${upiLink}" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none">
+            📱 Open UPI App
+          </a>
+          <div style="margin-top:8px;font-size:11px;color:#7a7a9a">GPay, PhonePe, Paytm, etc.</div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7a7a9a;margin-bottom:7px">UPI Transaction ID *</label>
+          <input id="evt-upi-ref" type="text" placeholder="Enter after payment (e.g. 123456789012)" style="width:100%;height:46px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:0 14px;font-size:14px;color:#f0f0f8;outline:none;font-family:Outfit,sans-serif;transition:border-color .2s" onfocus="this.style.borderColor='#f5c518'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+        </div>
+        <button onclick="confirmEventPayment('${txnId}')" style="width:100%;height:52px;background:#f5c518;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:Outfit,sans-serif;transition:background .2s" onmouseover="this.style.background='#ffd84d'" onmouseout="this.style.background='#f5c518'">
+          ✓ Confirm Payment & Register
+        </button>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:#7a7a9a">Seat confirmed only after payment verification</div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+}
+
+function confirmEventPayment(txnId){
+  const ref = document.getElementById('evt-upi-ref').value.trim();
+  if(!ref){ alert('Please enter your UPI transaction ID after completing payment.'); return; }
+  if(txnId){ TNS_DB.confirmPayment(txnId, ref); }
+  document.getElementById('tns-payment-overlay').remove();
+  const successEl = document.createElement('div');
+  successEl.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0d261c;border:1px solid #00d68f;color:#00d68f;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;max-width:300px';
+  successEl.innerHTML = '✅ Registration confirmed! Check <a href="profile.html?tab=history" style="color:#00d68f;font-weight:700">My Profile</a> for receipt.';
+  document.body.appendChild(successEl);
+  setTimeout(() => successEl.remove(), 6000);
+}
+</script>
+</body>
+</html>

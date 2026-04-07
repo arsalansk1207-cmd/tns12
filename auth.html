@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TNS Arm Wrestling — Sign In / Join</title>
+<meta name="description" content="Join TNS Arm Wrestling — Pune's first arm wrestling club. Create your free athlete profile and start competing.">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="https://tnsarmwrestling.com/wp-content/uploads/2023/05/TNS-Logo-6.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-backend.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#f5c518;--red2:#ffd84d;--rg:rgba(245,197,24,0.18);
+  --gold:#f5c518;--dark:#08080f;--card:#111118;--card2:#18181f;
+  --border:rgba(255,255,255,.07);--text:#f0f0f8;--muted:#7a7a9a;
+  --font:'Outfit',sans-serif;--display:'Teko',sans-serif;
+}
+html,body{height:100%}
+body{background:var(--dark);color:var(--text);font-family:var(--font);display:flex;flex-direction:column;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ─── SPLIT LAYOUT ────────────────────────────── */
+.page{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:100vh;padding-top:64px}
+
+/* ─── LEFT PANEL ──────────────────────────────── */
+.left{position:relative;overflow:hidden;display:flex;align-items:flex-end}
+.left-img{position:absolute;inset:0}
+.left-img img{width:100%;height:100%;object-fit:cover}
+.left-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,15,.98) 0%,rgba(8,8,15,.6) 50%,rgba(8,8,15,.2) 100%)}
+.left-content{position:relative;z-index:1;padding:40px}
+.left-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.left-logo img{width:42px;height:42px;border-radius:50%;border:2px solid var(--red);object-fit:cover}
+.left-logo-name{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:1px}
+.left-logo-name span{color:var(--red)}
+.left-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(232,16,42,.12);border:1px solid rgba(232,16,42,.3);border-radius:100px;padding:5px 12px;margin-bottom:16px}
+.left-pill-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.left-pill span{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.left-title{font-family:var(--display);font-size:56px;font-weight:700;text-transform:uppercase;line-height:.92;margin-bottom:16px}
+.left-title em{color:var(--red);font-style:normal}
+.left-sub{font-size:14px;color:rgba(240,240,248,.6);line-height:1.7;margin-bottom:28px;max-width:320px}
+.perks{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.perk{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(240,240,248,.65)}
+.perk-icon{width:32px;height:32px;border-radius:9px;background:rgba(232,16,42,.1);border:1px solid rgba(232,16,42,.2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;color:var(--red)}
+.level-chips{display:flex;gap:6px;flex-wrap:wrap}
+.lchip{padding:4px 12px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1px solid}
+.lc-b{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.25);color:#38bdf8}
+.lc-a{background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.25);color:#fb923c}
+.lc-p{background:rgba(245,197,24,.07);border-color:rgba(245,197,24,.25);color:var(--gold)}
+.lc-e{background:rgba(232,16,42,.07);border-color:rgba(232,16,42,.25);color:var(--red)}
+.lc-c{background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.25);color:#a78bfa}
+
+/* ─── RIGHT PANEL (FORM) ──────────────────────── */
+.right{background:var(--card);display:flex;align-items:center;justify-content:center;padding:40px 32px;overflow-y:auto}
+.form-wrap{width:100%;max-width:420px}
+.back-btn{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:28px;transition:color .2s;border:none;background:none;cursor:pointer;padding:0}
+.back-btn:hover{color:var(--red)}
+
+/* ─── TABS ────────────────────────────────────── */
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--dark);border-radius:14px;padding:4px;margin-bottom:32px;gap:4px}
+.tab{padding:12px;border-radius:10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;text-align:center;color:var(--muted);transition:all .25s;border:none;background:transparent}
+.tab.on{background:var(--card2);color:var(--text)}
+
+/* ─── PANEL ───────────────────────────────────── */
+.panel{display:none}
+.panel.on{display:block}
+.panel-title{font-family:var(--display);font-size:34px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.panel-sub{font-size:14px;color:var(--muted);margin-bottom:24px}
+
+/* ─── FORM ELEMENTS ───────────────────────────── */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.fw{position:relative}
+.fi{width:100%;height:50px;background:var(--dark);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 16px 0 44px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fi:focus{border-color:var(--red)}
+.fi::placeholder{color:rgba(122,122,154,.5)}
+.fi.no-icon{padding-left:16px}
+.fw-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.fw-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;cursor:pointer;padding:4px;border:none;background:none;color:var(--muted);transition:color .2s}
+.fw-eye:hover{color:var(--text)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fsel{width:100%;height:50px;background:var(--dark);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 16px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s}
+.fsel:focus{border-color:var(--red)}
+.fhint{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* ─── PASSWORD STRENGTH ───────────────────────── */
+.pw-strength{margin-top:7px}
+.pw-bar{height:3px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin-bottom:4px}
+.pw-fill{height:100%;width:0;border-radius:10px;transition:all .4s}
+.pw-label{font-size:11px;color:var(--muted)}
+
+/* ─── ERROR BOX ───────────────────────────────── */
+.err{background:rgba(232,16,42,.07);border:1px solid rgba(232,16,42,.25);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;align-items:center;gap:8px}
+.err.show{display:flex}
+
+/* ─── TERMS ───────────────────────────────────── */
+.terms-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px}
+.terms-row input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--red);cursor:pointer;flex-shrink:0}
+.terms-row label{font-size:13px;color:var(--muted);line-height:1.55;cursor:pointer}
+.terms-row a{color:var(--red)}
+
+/* ─── SUBMIT BUTTON ───────────────────────────── */
+.submit-btn{width:100%;height:52px;background:var(--red);border:none;border-radius:12px;font-family:var(--font);font-size:15px;font-weight:700;letter-spacing:.5px;color:#000;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:9px}
+.submit-btn:hover{background:var(--red2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(232,16,42,.35)}
+.submit-btn:active{transform:none}
+.submit-btn:disabled{opacity:.55;pointer-events:none}
+
+/* ─── DIVIDER ─────────────────────────────────── */
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0}
+.div-line{flex:1;height:1px;background:rgba(255,255,255,.06)}
+.div-text{font-size:11px;color:var(--muted);letter-spacing:1px}
+
+/* ─── SOCIAL BTNS ─────────────────────────────── */
+.social-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.social-btn{height:48px;background:var(--dark);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.social-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text);background:var(--card2)}
+
+/* ─── SWITCH TEXT ─────────────────────────────── */
+.switch-text{text-align:center;font-size:13px;color:var(--muted);margin-top:18px}
+.switch-text a{color:var(--red);cursor:pointer;font-weight:600}
+
+/* ─── FORGOT ──────────────────────────────────── */
+.forgot-row{text-align:right;margin-bottom:20px}
+.forgot-row a{font-size:12px;color:var(--muted);transition:color .2s;cursor:pointer}
+.forgot-row a:hover{color:var(--red)}
+
+/* ─── LOADING SPINNER ─────────────────────────── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ─── SUCCESS STATE ───────────────────────────── */
+.success-box{text-align:center;padding:24px 0;display:none}
+.success-box.show{display:block}
+.success-icon{font-size:48px;margin-bottom:14px}
+.success-title{font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted)}
+
+/* ─── MOBILE ──────────────────────────────────── */
+/* Mobile value-prop banner shown instead of full left panel */
+.mobile-perks-banner{display:none;background:rgba(232,16,42,.07);border:1px solid rgba(232,16,42,.18);border-radius:14px;padding:14px 16px;margin-bottom:22px}
+.mpb-title{font-family:var(--display);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;color:var(--text)}
+.mpb-title em{color:var(--red);font-style:normal}
+.mpb-perks{display:flex;flex-direction:column;gap:7px}
+.mpb-perk{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(240,240,248,.7)}
+.mpb-perk i{color:var(--red);font-size:11px;width:14px;flex-shrink:0}
+
+@media(max-width:768px){
+  .page{grid-template-columns:1fr}
+  .left{display:none}
+  .right{padding:32px 24px;align-items:flex-start;min-height:100vh}
+  .form-wrap{max-width:100%}
+  .frow{grid-template-columns:1fr}
+  .mobile-perks-banner{display:block}
+  .back-btn{margin-bottom:18px}
+}
+@media(max-width:360px){
+  .right{padding:24px 16px}
+}
+
+/* ─── FORGOT PASSWORD MODAL ───────────────────── */
+.fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.fp-overlay.on{opacity:1;pointer-events:all}
+.fp-modal{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:32px;width:100%;max-width:400px}
+.fp-title{font-family:var(--display);font-size:26px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.fp-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.fp-x{float:right;margin-top:-4px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;transition:color .2s}
+.fp-x:hover{color:var(--red)}
+.fp-msg{font-size:13px;color:#00d68f;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.2);border-radius:8px;padding:10px 14px;margin-top:12px;display:none}
+.fp-msg.show{display:block}
+
+/* ─── COMING SOON TOAST ───────────────────────── */
+#auth-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--card);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:10px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .35s;white-space:nowrap;pointer-events:none}
+#auth-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* === TNS UNIVERSAL NAV === */
+.tns-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;padding:0 20px;display:flex;align-items:center;gap:16px;transition:background .3s,border .3s}
+.tns-nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.tns-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.tns-nav-logo img{width:38px;height:38px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-nav-brand{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:#f0f0f8;line-height:1}
+.tns-nav-brand span{color:#f5c518}
+.tns-nav-links{display:flex;gap:2px;margin-left:auto}
+.tns-nav-links a{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;color:#7a7a9a;text-decoration:none;transition:all .2s}
+.tns-nav-links a:hover{color:#f0f0f8;background:rgba(255,255,255,.07)}
+.tns-nav-links a.tns-active{color:#f5c518;background:rgba(245,197,24,.08)}
+.tns-nav-auth{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
+.tns-btn-join{padding:9px 20px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .2s;white-space:nowrap;display:inline-block}
+.tns-btn-join:hover{background:#ffd84d}
+.tns-btn-signin{padding:9px 16px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-size:13px;font-weight:600;color:#f0f0f8;text-decoration:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;display:inline-block}
+.tns-btn-signin:hover{border-color:rgba(255,255,255,.4)}
+.tns-user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:#111118;border:1px solid rgba(255,255,255,.08);border-radius:100px;text-decoration:none;transition:border-color .2s;cursor:pointer;flex-shrink:0}
+.tns-user-pill:hover{border-color:rgba(245,197,24,.4)}
+.tns-u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-family:'Teko',sans-serif;font-size:13px;font-weight:700;color:#000;flex-shrink:0;overflow:hidden;border:2px solid #f5c518}
+.tns-u-av img{width:100%;height:100%;object-fit:cover}
+.tns-uname{font-size:13px;font-weight:600;color:#f0f0f8}
+.tns-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;flex-shrink:0}
+.tns-ham span{width:22px;height:2px;background:#f0f0f8;border-radius:2px;transition:all .3s;display:block}
+.tns-ham.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.tns-ham.open span:nth-child(2){opacity:0}
+.tns-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.tns-mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.99);backdrop-filter:blur(24px);z-index:199;padding:20px 16px;flex-direction:column;gap:4px;overflow-y:auto}
+.tns-mob-nav.open{display:flex}
+.tns-mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:#7a7a9a;text-decoration:none;border:1px solid transparent;transition:all .2s}
+.tns-mob-nav a:hover{color:#f0f0f8;background:#111118;border-color:rgba(255,255,255,.07)}
+.tns-mob-nav a.tns-active{color:#f5c518;background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.15)}
+.tns-mob-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.tns-mob-join{display:block;padding:15px;background:#f5c518;border-radius:12px;font-size:15px;font-weight:700;color:#000;text-align:center;text-decoration:none;margin-top:8px}
+.tns-mob-prof{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);margin-top:8px;text-decoration:none;cursor:pointer}
+.tns-mob-prof-name{font-size:15px;font-weight:700;color:#f0f0f8}
+.tns-mob-prof-sub{font-size:12px;color:#7a7a9a}
+.tns-mob-signout{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#7a7a9a;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:6px;display:block;text-align:center}
+@media(max-width:768px){.tns-nav-links,.tns-nav-auth{display:none}.tns-ham{display:flex}}
+
+/* === TNS UNIVERSAL FOOTER === */
+.tns-footer{background:#0a0a12;border-top:1px solid rgba(255,255,255,.06);padding:56px 20px 0;margin-top:80px}
+.tns-fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px}
+.tns-fb{display:flex;flex-direction:column;gap:14px}
+.tns-fl{display:flex;align-items:center;gap:12px}
+.tns-fl img{width:44px;height:44px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-fn{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#f0f0f8}
+.tns-fn span{color:#f5c518}
+.tns-fe{font-size:11px;color:#7a7a9a;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.tns-fd{font-size:13px;color:#7a7a9a;line-height:1.7;max-width:260px}
+.tns-fs{display:flex;gap:8px;flex-wrap:wrap}
+.tns-fs a{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#7a7a9a;font-size:15px;transition:all .2s;text-decoration:none}
+.tns-fs a:hover{background:#f5c518;border-color:#f5c518;color:#000}
+.tns-fct{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7a7a9a;margin-bottom:16px}
+.tns-fc{display:flex;flex-direction:column;gap:10px}
+.tns-fc a{font-size:14px;color:rgba(240,240,248,.45);text-decoration:none;transition:color .2s}
+.tns-fc a:hover{color:#f5c518}
+.tns-fc span{font-size:13px;color:rgba(240,240,248,.35);display:flex;align-items:center;gap:6px}
+.tns-fc i{font-size:12px;color:#f5c518}
+.tns-fbot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7a7a9a;max-width:1100px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.tns-fbot a{color:#7a7a9a;text-decoration:none;transition:color .2s}
+.tns-fbot a:hover{color:#f5c518}
+@media(max-width:768px){.tns-fi{grid-template-columns:1fr 1fr;gap:28px}.tns-fb{grid-column:span 2}.tns-footer{margin-top:40px}}
+@media(max-width:480px){.tns-fi{grid-template-columns:1fr}.tns-fb{grid-column:span 1}.tns-fbot{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<nav class="tns-nav" id="tns-nav">
+  <a href="index.html" class="tns-nav-logo"><img src="TNS-Logo-6.png" alt="TNS"><div class="tns-nav-brand">TNS<span> AW</span></div></a>
+  <div class="tns-nav-links">
+    <a href="index.html">Home</a>
+    <a href="training.html">Training</a>
+    <a href="events.html">Events</a>
+    <a href="community.html">Community</a>
+    <a href="tnarmy.html">TNS Army</a>
+  </div>
+  <div class="tns-nav-auth" id="tns-nav-auth"><a href="auth.html" class="tns-btn-signin">Sign In</a><a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a></div>
+  <button class="tns-ham" id="tns-ham" onclick="tnsToggleMob()" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="tns-mob-nav" id="tns-mob-nav">
+  <a href="index.html" onclick="tnsCloseMob()">Home</a>
+  <a href="training.html" onclick="tnsCloseMob()">Training</a>
+  <a href="events.html" onclick="tnsCloseMob()">Events</a>
+  <a href="community.html" onclick="tnsCloseMob()">Community</a>
+  <a href="tnarmy.html" onclick="tnsCloseMob()">TNS Army</a>
+  <div class="tns-mob-sep"></div>
+  <div id="tns-mob-auth"><a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a></div>
+</div>
+
+<div class="page">
+
+  <!-- LEFT VISUAL PANEL -->
+  <div class="left">
+    <div class="left-img">
+      <img src="TNS-Arm-wrestling-18-scaled.jpg" alt="TNS Arm Wrestling">
+    </div>
+    <div class="left-content">
+      <a href="index.html" class="left-logo">
+        <img src="TNS-Logo-6.png" alt="TNS">
+        <div class="left-logo-name">TNS<span>ARMWRESTLING</span></div>
+      </a>
+      <div class="left-pill"><div class="left-pill-dot"></div><span>Pune's #1 Arm Wrestling Club</span></div>
+      <div class="left-title">JOIN THE<br><em>IRON</em><br>TRIBE</div>
+      <p class="left-sub">Become part of India's most passionate arm wrestling community. Train. Compete. Rise.</p>
+      <div class="perks">
+        <div class="perk"><div class="perk-icon"><i class="fa-solid fa-trophy"></i></div>Access exclusive tournaments & event registrations</div>
+        <div class="perk"><div class="perk-icon"><i class="fa-solid fa-comments"></i></div>Post in the TNS Community — share techniques & videos</div>
+        <div class="perk"><div class="perk-icon"><i class="fa-solid fa-chart-line"></i></div>Track your XP, level & rank on the leaderboard</div>
+        <div class="perk"><div class="perk-icon"><i class="fa-solid fa-graduation-cap"></i></div>Unlock coaching content as you level up</div>
+      </div>
+      <div class="level-chips">
+        <div class="lchip lc-b">Beginner</div>
+        <div class="lchip lc-a">Amateur</div>
+        <div class="lchip lc-p">Pro</div>
+        <div class="lchip lc-e">Elite</div>
+        <div class="lchip lc-c">Coach</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM PANEL -->
+  <div class="right">
+    <div class="form-wrap">
+      <button class="back-btn" onclick="window.location.href=(new URLSearchParams(window.location.search).get('redirect'))||'profile.html'">
+        <i class="fa-solid fa-arrow-left"></i> Back to Site
+      </button>
+
+      <!-- MOBILE VALUE PROP BANNER (shown only on mobile since left panel is hidden) -->
+      <div class="mobile-perks-banner">
+        <div class="mpb-title">JOIN THE <em>IRON</em> TRIBE</div>
+        <div class="mpb-perks">
+          <div class="mpb-perk"><i class="fa-solid fa-trophy"></i> Access exclusive tournaments &amp; events</div>
+          <div class="mpb-perk"><i class="fa-solid fa-comments"></i> Post in the community — share techniques</div>
+          <div class="mpb-perk"><i class="fa-solid fa-chart-line"></i> Track your XP, level &amp; leaderboard rank</div>
+          <div class="mpb-perk"><i class="fa-solid fa-graduation-cap"></i> Unlock coaching content as you level up</div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab on" id="tab-login" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- ── LOGIN PANEL ── -->
+      <div class="panel on" id="panel-login">
+        <div class="panel-title">Welcome Back</div>
+        <div class="panel-sub">Sign in to your TNS profile.</div>
+
+        <div class="err" id="login-err"><i class="fa-solid fa-circle-exclamation"></i><span id="login-err-msg"></span></div>
+
+        <div class="fg">
+          <label class="fl">Email or Username</label>
+          <div class="fw">
+            <i class="fa-solid fa-user fw-icon"></i>
+            <input class="fi" id="li-user" type="text" placeholder="Username or email" autocomplete="username">
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Password</label>
+          <div class="fw">
+            <i class="fa-solid fa-lock fw-icon"></i>
+            <input class="fi" id="li-pass" type="password" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="fw-eye" type="button" onclick="togglePw('li-pass',this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+
+        <div class="forgot-row"><a onclick="openForgot()">Forgot password?</a></div>
+
+        <button class="submit-btn" id="btn-login" onclick="doLogin()">
+          <i class="fa-solid fa-hand-fist"></i> Sign In
+        </button>
+
+        <div class="divider"><div class="div-line"></div><span class="div-text">or continue with</span><div class="div-line"></div></div>
+
+        <div class="social-row">
+          <button class="social-btn" onclick="doGoogleLogin()" type="button"><i class="fa-brands fa-google" style="color:#ea4335"></i> Google</button>
+          <button class="social-btn" onclick="showAuthToast('Facebook sign-in coming soon!')" type="button"><i class="fa-brands fa-facebook-f" style="color:#1877f2"></i> Facebook</button>
+        </div>
+
+        <div class="switch-text">No account? <a onclick="switchTab('signup')">Create one free →</a></div>
+      </div>
+
+      <!-- ── SIGNUP PANEL ── -->
+      <div class="panel" id="panel-signup">
+        <div class="panel-title">Join the Army</div>
+        <div class="panel-sub">Create your free athlete profile.</div>
+
+        <div class="err" id="sg-err"><i class="fa-solid fa-circle-exclamation"></i><span id="sg-err-msg"></span></div>
+
+        <div class="frow">
+          <div class="fg">
+            <label class="fl">First Name</label>
+            <div class="fw"><i class="fa-solid fa-user fw-icon"></i><input class="fi" id="sg-fn" type="text" placeholder="Pranav"></div>
+          </div>
+          <div class="fg">
+            <label class="fl">Last Name</label>
+            <div class="fw"><i class="fa-solid fa-user fw-icon"></i><input class="fi" id="sg-ln" type="text" placeholder="Kumar"></div>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Username</label>
+          <div class="fw"><i class="fa-solid fa-at fw-icon"></i><input class="fi" id="sg-user" type="text" placeholder="pullking91" autocomplete="username"></div>
+          <div class="fhint">Your public handle on the community</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <div class="fw"><i class="fa-solid fa-envelope fw-icon"></i><input class="fi" id="sg-email" type="email" placeholder="you@email.com" autocomplete="email"></div>
+        </div>
+
+        <div class="frow">
+          <div class="fg">
+            <label class="fl">Weight Class</label>
+            <select class="fsel" id="sg-weight">
+              <option value="">Select</option>
+              <option>Under 55kg</option><option>55–65kg</option><option>65–75kg</option>
+              <option>75–85kg</option><option>85–95kg</option><option>95kg+</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Pull Hand</label>
+            <select class="fsel" id="sg-hand">
+              <option value="">Select</option>
+              <option>Right Hand</option><option>Left Hand</option><option>Both</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">City</label>
+          <div class="fw"><i class="fa-solid fa-location-dot fw-icon"></i><input class="fi" id="sg-city" type="text" placeholder="Pune"></div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Password</label>
+          <div class="fw">
+            <i class="fa-solid fa-lock fw-icon"></i>
+            <input class="fi" id="sg-pass" type="password" placeholder="At least 8 characters" oninput="checkPw(this.value)" autocomplete="new-password">
+            <button class="fw-eye" type="button" onclick="togglePw('sg-pass',this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+          <div class="pw-strength">
+            <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
+            <div class="pw-label" id="pw-lbl">Enter a password</div>
+          </div>
+        </div>
+
+        <div class="terms-row">
+          <input type="checkbox" id="terms" onchange="document.getElementById('btn-signup').disabled=!this.checked">
+          <label for="terms">I agree to the <a href="terms.html">Terms & Conditions</a> and <a href="privacy.html">Privacy Policy</a>. I confirm I am 13+ years old.</label>
+        </div>
+
+        <button class="submit-btn" id="btn-signup" disabled onclick="doSignup()">
+          <i class="fa-solid fa-hand-fist"></i> Create Account
+        </button>
+
+        <div class="switch-text">Already have an account? <a onclick="switchTab('login')">Sign in →</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="fp-overlay" id="fp-overlay" onclick="if(event.target===this)closeForgot()">
+  <div class="fp-modal">
+    <button class="fp-x" onclick="closeForgot()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="fp-title">Reset Password</div>
+    <div class="fp-sub">Enter your email and we'll send you a reset link.</div>
+    <div class="fg">
+      <label class="fl">Email Address</label>
+      <div class="fw">
+        <i class="fa-solid fa-envelope fw-icon"></i>
+        <input class="fi" id="fp-email" type="email" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitForgot()">
+      </div>
+    </div>
+    <div class="fp-msg" id="fp-msg"><i class="fa-solid fa-check-circle"></i> If that email is registered, a reset link has been sent.</div>
+    <button class="submit-btn" id="btn-forgot" onclick="submitForgot()" style="margin-top:8px">
+      <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+    </button>
+  </div>
+</div>
+
+<!-- AUTH TOAST -->
+<div id="auth-toast"></div>
+
+<script>
+// Redirect if already logged in
+try{if(TNS_DB.getSession())window.location.href='community.html'}catch(e){}
+
+// ── URL TAB SYNC ──────────────────────────────
+(function(){
+  const p = new URLSearchParams(location.search).get('tab');
+  if(p==='signup') switchTab('signup');
+})();
+
+// ── TABS ──────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+  document.getElementById('tab-'+t).classList.add('on');
+  document.getElementById('panel-'+t).classList.add('on');
+  // Reflect in URL without page reload so back button works
+  history.replaceState(null,'',location.pathname+'?tab='+t);
+}
+
+// ── TOGGLE PASSWORD ───────────────────────────
+function togglePw(id, btn){
+  const inp = document.getElementById(id);
+  const isPass = inp.type==='password';
+  inp.type = isPass ? 'text' : 'password';
+  btn.querySelector('i').className = isPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+}
+
+// ── PASSWORD STRENGTH ─────────────────────────
+function checkPw(v){
+  const fill = document.getElementById('pw-fill');
+  const lbl = document.getElementById('pw-lbl');
+  let s = 0;
+  if(v.length>=8) s++;
+  if(/[A-Z]/.test(v)) s++;
+  if(/[0-9]/.test(v)) s++;
+  if(/[^A-Za-z0-9]/.test(v)) s++;
+  const cfg = [
+    {w:'0%',c:'',t:'Enter a password'},
+    {w:'25%',c:'#e8102a',t:'Weak'},
+    {w:'50%',c:'#f97316',t:'Fair'},
+    {w:'75%',c:'#f5c518',t:'Good'},
+    {w:'100%',c:'#00d68f',t:'Strong ✓'},
+  ];
+  const c = cfg[s];
+  fill.style.width = c.w;
+  fill.style.background = c.c;
+  lbl.textContent = c.t;
+  lbl.style.color = c.c || 'var(--muted)';
+}
+
+// ── ERROR HELPER ──────────────────────────────
+function showErr(panel, msg){
+  const box = document.getElementById(panel+'-err');
+  document.getElementById(panel+'-err-msg').textContent = msg;
+  box.classList.add('show');
+  setTimeout(()=>box.classList.remove('show'), 5000);
+}
+
+// ── LOADING STATE ─────────────────────────────
+function setLoading(btnId, loading, defaultHTML){
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<div class="spinner"></div> Processing...'
+    : defaultHTML;
+}
+
+// ── AUTH TOAST (replaces alert()) ─────────────
+function showAuthToast(msg){
+  const t = document.getElementById('auth-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+// Keep backward compat alias
+function showInfo(msg){ showAuthToast(msg); }
+
+// ── FORGOT PASSWORD ───────────────────────────
+function openForgot(){
+  document.getElementById('fp-email').value='';
+  document.getElementById('fp-msg').classList.remove('show');
+  document.getElementById('fp-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('fp-email').focus(),200);
+}
+function closeForgot(){
+  document.getElementById('fp-overlay').classList.remove('on');
+}
+function submitForgot(){
+  const email = document.getElementById('fp-email').value.trim();
+  if(!email||!email.includes('@')){
+    showAuthToast('Please enter a valid email address');
+    return;
+  }
+  setLoading('btn-forgot',true,'<i class="fa-solid fa-paper-plane"></i> Send Reset Link');
+  setTimeout(()=>{
+    setLoading('btn-forgot',false,'<i class="fa-solid fa-paper-plane"></i> Send Reset Link');
+    document.getElementById('fp-msg').classList.add('show');
+  },1200);
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeForgot(); });
+
+// ── LOGIN ─────────────────────────────────────
+async function doLogin(){
+  const u = document.getElementById('li-user').value.trim();
+  const p = document.getElementById('li-pass').value;
+  if(!u){ showErr('login','Please enter your username or email'); return }
+  if(!p){ showErr('login','Please enter your password'); return }
+
+  setLoading('btn-login', true, '<i class="fa-solid fa-hand-fist"></i> Sign In');
+
+  try {
+    const res = await TNS_DB.login(u, p);
+    if(!res.ok){
+      setLoading('btn-login', false, '<i class="fa-solid fa-hand-fist"></i> Sign In');
+      showErr('login', res.error || 'Invalid credentials. Please check and try again.');
+    } else {
+      setLoading('btn-login', false, '<i class="fa-solid fa-check"></i> Welcome back!');
+      setTimeout(()=>{ window.location.href='community.html' }, 800);
+    }
+  } catch(e) {
+    setLoading('btn-login', false, '<i class="fa-solid fa-hand-fist"></i> Sign In');
+    showErr('login', 'An error occurred. Please try again.');
+  }
+}
+
+// ── SIGNUP ────────────────────────────────────
+async function doSignup(){
+  const fn = document.getElementById('sg-fn').value.trim();
+  const ln = document.getElementById('sg-ln').value.trim();
+  const user = document.getElementById('sg-user').value.trim();
+  const email = document.getElementById('sg-email').value.trim();
+  const pass = document.getElementById('sg-pass').value;
+  const weight = document.getElementById('sg-weight').value;
+  const hand = document.getElementById('sg-hand').value;
+  const city = document.getElementById('sg-city').value.trim();
+
+  if(!fn||!ln){ showErr('sg','Please enter your full name'); return }
+  if(!user||user.length<3){ showErr('sg','Username must be at least 3 characters'); return }
+  if(!/^[a-zA-Z0-9_]+$/.test(user)){ showErr('sg','Username can only contain letters, numbers, and _'); return }
+  if(!email||!email.includes('@')){ showErr('sg','Please enter a valid email address'); return }
+  if(pass.length<8){ showErr('sg','Password must be at least 8 characters'); return }
+
+  setLoading('btn-signup', true, '<i class="fa-solid fa-hand-fist"></i> Create Account');
+
+  try {
+    const res = await TNS_DB.register({
+      name: fn+' '+ln, username: user, email, password: pass,
+      weight, hand, city
+    });
+    if(!res.ok){
+      setLoading('btn-signup', false, '<i class="fa-solid fa-hand-fist"></i> Create Account');
+      document.getElementById('btn-signup').disabled = false;
+      document.getElementById('terms').checked = true;
+      showErr('sg', res.error || 'Registration failed. Please try again.');
+    } else {
+      setLoading('btn-signup', false, '<i class="fa-solid fa-check"></i> Account Created!');
+      setTimeout(()=>{ window.location.href='community.html' }, 1000);
+    }
+  } catch(e) {
+    setLoading('btn-signup', false, '<i class="fa-solid fa-hand-fist"></i> Create Account');
+    document.getElementById('btn-signup').disabled = false;
+    document.getElementById('terms').checked = true;
+    showErr('sg', 'An error occurred. Please try again.');
+  }
+}
+
+// ── GOOGLE LOGIN ──────────────────────────────
+async function doGoogleLogin(){
+  try {
+    const res = await TNS_DB.loginWithGoogle();
+    if(!res.ok){
+      showAuthToast('❌ ' + (res.error || 'Google login failed'));
+    } else {
+      showAuthToast('✓ Welcome ' + res.user.name + '!');
+      setTimeout(()=>{ window.location.href='community.html' }, 1000);
+    }
+  } catch(e) {
+    showAuthToast('❌ Google login error: ' + e.message);
+  }
+}
+</script>
+
+
+<script>
+(function(){
+  var nav=document.getElementById('tns-nav');
+  if(nav){window.addEventListener('scroll',function(){nav.classList.toggle('stuck',window.scrollY>20);},{passive:true});}
+  window.tnsToggleMob=function(){
+    var h=document.getElementById('tns-ham'),m=document.getElementById('tns-mob-nav');
+    if(h)h.classList.toggle('open');if(m)m.classList.toggle('open');
+    document.body.style.overflow=(m&&m.classList.contains('open'))?'hidden':'';
+  };
+  window.tnsCloseMob=function(){
+    var h=document.getElementById('tns-ham'),m=document.getElementById('tns-mob-nav');
+    if(h)h.classList.remove('open');if(m)m.classList.remove('open');
+    document.body.style.overflow='';
+  };
+  function updateNavAuth(){
+    var user=(typeof TNS_DB!=='undefined')?TNS_DB.getCurrentUser():null;
+    var a=document.getElementById('tns-nav-auth');
+    var ma=document.getElementById('tns-mob-auth');
+    if(!a)return;
+    if(user){
+      var av=user.profilePic?'<img src="'+user.profilePic+'">':(user.avatar||(user.name||'U').slice(0,2).toUpperCase());
+      a.innerHTML='<a href="profile.html" class="tns-user-pill"><div class="tns-u-av">'+av+'</div><span class="tns-uname">'+user.username+'</span></a>';
+      if(ma){
+        ma.innerHTML='<a href="profile.html" class="tns-mob-prof" onclick="tnsCloseMob()"><div class="tns-u-av">'+av+'</div><div><div class="tns-mob-prof-name">'+user.name+'</div><div class="tns-mob-prof-sub">'+user.level.toUpperCase()+' · @'+user.username+'</div></div></a><button onclick="TNS_DB.logout();window.location.href='index.html'" class="tns-mob-signout">Sign Out</button>';
+      }
+    } else {
+      a.innerHTML='<a href="auth.html" class="tns-btn-signin">Sign In</a><a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a>';
+      if(ma)ma.innerHTML='<a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a>';
+    }
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateNavAuth);}else{updateNavAuth();}
+})();
+</script>
+
+</body>
+</html>

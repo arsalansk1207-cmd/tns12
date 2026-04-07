@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TNS — Admin Panel</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-backend.js"></script>
+<style>
+:root{--red:#e8102a;--gold:#f5c518;--dark:#050507;--s1:#0e0e12;--s2:#15151b;--s3:#1c1c25;--bd:#2a2a36;--t:#e8e8f0;--td:#8888a0;--tm:#44445a;--em:#00d68f;--sky:#38bdf8;--violet:#a78bfa;--orange:#f97316;--font:'Outfit',sans-serif;--display:'Teko',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--dark);color:var(--t);font-family:var(--font);display:flex;flex-direction:column}
+
+/* AUTH GATE */
+#auth-gate{position:fixed;inset:0;background:var(--dark);z-index:9999;display:flex;align-items:center;justify-content:center}
+.gate-box{background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:48px;width:360px;text-align:center}
+.gate-icon{font-size:48px;margin-bottom:16px}
+.gate-title{font-family:var(--display);font-size:32px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.gate-sub{font-size:13px;color:var(--td);margin-bottom:24px}
+.gate-input{width:100%;height:46px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:0 14px;font-family:var(--font);font-size:14px;color:var(--t);outline:none;text-align:center;letter-spacing:2px;transition:border-color .2s;margin-bottom:12px}
+.gate-input:focus{border-color:var(--red)}
+.gate-btn{width:100%;height:46px;background:var(--red);border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:background .2s}
+.gate-btn:hover{background:#ff2038}
+.gate-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+
+/* TOP BAR */
+.atop{height:54px;background:rgba(5,5,7,.98);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;z-index:100}
+.atop-brand{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:2px}
+.atop-brand span{color:var(--red)}
+.atop-badge{background:rgba(255,77,99,.12);border:1px solid rgba(255,77,99,.3);border-radius:5px;padding:2px 8px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff4d63}
+.atop-sep{width:1px;height:20px;background:var(--bd)}
+.atop-nav{display:flex;gap:2px}
+.atop-link{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;color:var(--td);transition:all .2s;border:none;background:none;font-family:var(--font)}
+.atop-link:hover,.atop-link.active{background:var(--s3);color:var(--t)}
+.atop-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.atop-user{font-size:12px;color:var(--td)}
+.atop-user span{color:#ff4d63;font-weight:700}
+.btn-sm{padding:6px 14px;background:transparent;border:1px solid var(--bd);border-radius:7px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--td);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.btn-sm:hover{border-color:var(--red);color:var(--red)}
+.btn-sm.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn-sm.primary:hover{background:#ff2038}
+
+/* LAYOUT */
+.admin-body{flex:1;display:flex;overflow:hidden}
+.admin-sl{width:200px;background:var(--s1);border-right:1px solid var(--bd);flex-shrink:0;overflow-y:auto}
+.admin-sl::-webkit-scrollbar{display:none}
+.asl-nav{padding:12px 8px}
+.asl-lbl{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--tm);padding:0 8px;margin-bottom:6px;margin-top:12px}
+.asl-lbl:first-child{margin-top:0}
+.asl-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--td);transition:all .2s;border:none;background:none;width:100%;font-family:var(--font);text-align:left}
+.asl-item:hover{background:var(--s3);color:var(--t)}
+.asl-item.active{background:rgba(232,16,42,.1);color:var(--red);border:1px solid rgba(232,16,42,.15)}
+.asl-item i{width:14px;text-align:center;font-size:12px;flex-shrink:0}
+.asl-cnt{margin-left:auto;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px}
+.asl-cnt.warn{background:var(--orange)}
+
+/* MAIN */
+.admin-main{flex:1;overflow-y:auto;background:var(--dark)}
+.admin-main::-webkit-scrollbar{width:3px}
+.admin-main::-webkit-scrollbar-thumb{background:var(--bd);border-radius:10px}
+.apage{display:none;padding:22px}
+.apage.active{display:block}
+.apage-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:14px;flex-wrap:wrap}
+.apage-title{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.apage-sub{font-size:12px;color:var(--tm);margin-top:2px}
+.apage-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px 20px;position:relative;overflow:hidden}
+.sc-icon{font-size:20px;margin-bottom:8px;opacity:.6}
+.sc-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);margin-bottom:2px}
+.sc-num{font-family:var(--display);font-size:36px;font-weight:700;line-height:1}
+.sc-change{font-size:11px;margin-top:5px;color:var(--td)}
+.sc-change.up{color:var(--em)}
+.sc-change.down{color:var(--red)}
+
+/* CHART */
+.chart-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:18px}
+.chart-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);margin-bottom:14px}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:80px}
+.bar{flex:1;border-radius:4px 4px 0 0;background:var(--s3);transition:background .3s;cursor:pointer;min-height:4px;position:relative}
+.bar:hover,.bar.hi{background:var(--red)}
+.bar-tip{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:2px 6px;font-size:9px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.bar:hover .bar-tip{opacity:1}
+.bar-lbls{display:flex;gap:4px;margin-top:4px}
+.bar-lbl{flex:1;text-align:center;font-size:9px;color:var(--tm);font-weight:600;letter-spacing:.3px}
+
+/* TABLE CARD */
+.tbl-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.tbl-head{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tbl-head-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--td)}
+.tbl-search{height:32px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:0 10px 0 30px;font-size:12px;color:var(--t);outline:none;font-family:var(--font);width:200px;position:relative}
+.tbl-search::placeholder{color:var(--tm)}
+.tbl-search-wrap{position:relative}
+.tbl-search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--tm);pointer-events:none}
+table{width:100%;border-collapse:collapse}
+th{padding:8px 14px;text-align:left;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);border-bottom:1px solid var(--bd);background:var(--s2);white-space:nowrap}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid rgba(42,42,54,.6);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.badge{padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.b-beginner{background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)}
+.b-amateur{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+.b-pro{background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.2)}
+.b-elite{background:rgba(232,16,42,.1);color:var(--red);border:1px solid rgba(232,16,42,.2)}
+.b-coach{background:rgba(167,139,250,.1);color:var(--violet);border:1px solid rgba(167,139,250,.2)}
+.b-admin{background:rgba(255,77,99,.1);color:#ff4d63;border:1px solid rgba(255,77,99,.2)}
+.b-paid{background:rgba(0,214,143,.1);color:var(--em);border:1px solid rgba(0,214,143,.2)}
+.b-pending{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+.b-failed{background:rgba(232,16,42,.1);color:var(--red);border:1px solid rgba(232,16,42,.2)}
+.b-banned{background:rgba(232,16,42,.15);color:var(--red);border:1px solid rgba(232,16,42,.3)}
+.action-btn{padding:4px 10px;background:transparent;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-weight:600;color:var(--td);cursor:pointer;transition:all .2s;font-family:var(--font);margin-right:4px}
+.action-btn:hover{background:var(--s3);border-color:rgba(255,255,255,.2);color:var(--t)}
+.action-btn.danger{border-color:rgba(232,16,42,.3);color:var(--red)}
+.action-btn.danger:hover{background:rgba(232,16,42,.1)}
+.action-btn.success{border-color:rgba(0,214,143,.3);color:var(--em)}
+.action-btn.success:hover{background:rgba(0,214,143,.08)}
+
+/* LEVEL SELECT */
+.level-select{height:28px;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:0 6px;font-family:var(--font);font-size:11px;color:var(--t);outline:none;cursor:pointer}
+
+/* POST ACTIONS */
+.pin-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);border-radius:5px;font-size:9px;font-weight:700;color:var(--gold)}
+
+/* REPORT CARD */
+.report-card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.report-card.resolved{opacity:.45}
+.report-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:rgba(249,115,22,.1);color:var(--orange)}
+.report-icon.post{background:rgba(56,189,248,.1);color:var(--sky)}
+.report-info{flex:1;min-width:0}
+.report-type{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);margin-bottom:3px}
+.report-reason{font-size:13px;font-weight:600;margin-bottom:4px}
+.report-meta{font-size:11px;color:var(--td)}
+.report-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+
+/* SETTINGS */
+.settings-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px}
+.settings-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);margin-bottom:14px}
+.sg{margin-bottom:14px}
+.sl{display:block;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
+.si{width:100%;height:42px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:0 12px;font-family:var(--font);font-size:13px;color:var(--t);outline:none;transition:border-color .2s}
+.si:focus{border-color:var(--red)}
+
+/* TOAST */
+#toast{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(50px);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px}
+#toast.show{transform:none;opacity:1}
+#toast.s{background:#0d261c;border:1px solid var(--em);color:var(--em)}
+#toast.e{background:#261112;border:1px solid var(--red);color:var(--red)}
+#toast.i{background:#0d1826;border:1px solid var(--sky);color:var(--sky)}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-ov.on{opacity:1;pointer-events:all}
+.modal-box{background:var(--s1);border:1px solid var(--bd);border-radius:16px;width:100%;max-width:480px;overflow:hidden;transform:scale(.92);transition:transform .25s}
+.modal-ov.on .modal-box{transform:scale(1)}
+.modal-top{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.modal-ttl{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase}
+.modal-x{width:28px;height:28px;border-radius:7px;background:var(--s2);border:none;cursor:pointer;color:var(--td);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-x:hover{background:var(--red);color:#fff}
+.modal-body{padding:18px 20px}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
+
+@media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.admin-sl{display:none}.stats-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="gate-box">
+    <div class="gate-icon">🔐</div>
+    <div class="gate-title">Admin Access</div>
+    <div class="gate-sub">Enter admin credentials to continue</div>
+    <input class="gate-input" type="text" id="gate-user" placeholder="Username" autocomplete="off">
+    <input class="gate-input" type="password" id="gate-pass" placeholder="Password" onkeydown="if(event.key==='Enter')gateLogin()">
+    <button class="gate-btn" onclick="gateLogin()">Enter Admin Panel</button>
+    <div class="gate-err" id="gate-err"></div>
+    <div style="margin-top:14px;font-size:11px;color:var(--tm)">Default: tns_coach / tns123</div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="atop">
+  <div class="atop-brand">TNS<span> ADMIN</span></div>
+  <div class="atop-badge">SYSTEM</div>
+  <div class="atop-sep"></div>
+  <div class="atop-nav">
+    <button class="atop-link active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="atop-link" onclick="showPage('users',this)">Users</button>
+    <button class="atop-link" onclick="showPage('posts',this)">Posts</button>
+    <button class="atop-link" onclick="showPage('payments',this)">Payments</button>
+    <button class="atop-link" onclick="showPage('reports',this)">Reports <span id="report-badge" style="display:none;background:var(--orange);color:#fff;font-size:8px;padding:1px 5px;border-radius:100px;margin-left:4px;vertical-align:middle">0</span></button>
+    <button class="atop-link" onclick="showPage('settings',this)">Settings</button>
+  </div>
+  <div class="atop-right">
+    <span class="atop-user">Logged in as <span id="admin-username">—</span></span>
+    <a href="index.html" class="btn-sm">← Site</a>
+    <button class="btn-sm" onclick="adminLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="admin-body">
+  <!-- SIDEBAR -->
+  <div class="admin-sl">
+    <div class="asl-nav">
+      <div class="asl-lbl">Overview</div>
+      <button class="asl-item active" onclick="showPage('dashboard',null,this)"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+      <button class="asl-item" onclick="showPage('users',null,this)"><i class="fa-solid fa-users"></i> Users <span class="asl-cnt" id="sl-users-cnt">0</span></button>
+      <button class="asl-lbl" style="cursor:default">Community</button>
+      <button class="asl-item" onclick="showPage('posts',null,this)"><i class="fa-solid fa-newspaper"></i> Posts <span class="asl-cnt" id="sl-posts-cnt">0</span></button>
+      <button class="asl-item" onclick="showPage('reports',null,this)"><i class="fa-solid fa-flag"></i> Reports <span class="asl-cnt warn" id="sl-reports-cnt">0</span></button>
+      <div class="asl-lbl">Finance</div>
+      <button class="asl-item" onclick="showPage('payments',null,this)"><i class="fa-solid fa-indian-rupee-sign"></i> Payments</button>
+      <div class="asl-lbl">System</div>
+      <button class="asl-item" onclick="showPage('settings',null,this)"><i class="fa-solid fa-gear"></i> Settings</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="admin-main">
+
+    <!-- DASHBOARD -->
+    <div class="apage active" id="page-dashboard">
+      <div class="apage-head">
+        <div><div class="apage-title">Dashboard</div><div class="apage-sub">Overview of TNS community activity</div></div>
+        <div class="apage-actions">
+          <button class="btn-sm" onclick="refreshDashboard()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="stat-cards"></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px">
+        <div class="chart-card">
+          <div class="chart-title">Member Level Distribution</div>
+          <div id="level-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Revenue Summary</div>
+          <div id="revenue-summary"></div>
+        </div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-head"><div class="tbl-head-title">Recent Registrations</div></div>
+        <table><thead><tr><th>User</th><th>Level</th><th>City</th><th>Joined</th><th>XP</th></tr></thead>
+        <tbody id="recent-users"></tbody></table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="apage" id="page-users">
+      <div class="apage-head">
+        <div><div class="apage-title">Users</div><div class="apage-sub" id="users-count-sub">All registered members</div></div>
+        <div class="apage-actions">
+          <div class="tbl-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="tbl-search" type="text" placeholder="Search users..." oninput="filterUsers(this.value)" id="user-search"></div>
+        </div>
+      </div>
+      <div class="tbl-card">
+        <table>
+          <thead><tr><th>User</th><th>Level</th><th>City</th><th>XP</th><th>Posts</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- POSTS -->
+    <div class="apage" id="page-posts">
+      <div class="apage-head">
+        <div><div class="apage-title">Community Posts</div><div class="apage-sub">Manage all posts and content</div></div>
+        <div class="apage-actions">
+          <div class="tbl-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="tbl-search" type="text" placeholder="Search posts..." oninput="filterPosts(this.value)"></div>
+        </div>
+      </div>
+      <div class="tbl-card">
+        <table>
+          <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Votes</th><th>Comments</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="posts-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="apage" id="page-payments">
+      <div class="apage-head">
+        <div><div class="apage-title">Payments</div><div class="apage-sub" id="payments-summary-sub">All transactions</div></div>
+        <div class="apage-actions">
+          <button class="btn-sm" onclick="exportPayments()"><i class="fa-solid fa-download"></i> Export CSV</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="payment-stat-cards" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="tbl-card">
+        <div class="tbl-head">
+          <div class="tbl-head-title">All Transactions</div>
+          <select class="level-select" onchange="filterPayments(this.value)" style="height:32px;width:130px">
+            <option value="">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>User</th><th>Item</th><th>Type</th><th>Amount</th><th>Status</th><th>UPI Ref</th><th>Actions</th></tr></thead>
+          <tbody id="payments-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="apage" id="page-reports">
+      <div class="apage-head">
+        <div><div class="apage-title">Reports</div><div class="apage-sub">Reported content needing review</div></div>
+        <div class="apage-actions">
+          <button class="btn-sm" onclick="renderReports()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+      </div>
+      <div id="reports-list"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="apage" id="page-settings">
+      <div class="apage-head">
+        <div><div class="apage-title">Settings</div><div class="apage-sub">Configure TNS platform</div></div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">Payment Settings</div>
+        <div class="sg"><label class="sl">UPI ID</label><input class="si" type="text" id="set-upi-id" placeholder="tnsarmwrestling@upi"></div>
+        <div class="sg"><label class="sl">UPI Display Name</label><input class="si" type="text" id="set-upi-name" placeholder="TNS Arm Wrestling"></div>
+        <button class="btn-sm primary" onclick="saveSettings()">Save Settings</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">Admin Access</div>
+        <div class="sg"><label class="sl">Admin PIN (for gate)</label><input class="si" type="text" id="set-pin" placeholder="TNS2024"></div>
+        <button class="btn-sm primary" onclick="saveSettings()">Update PIN</button>
+      </div>
+      <div class="settings-card" style="border-color:rgba(232,16,42,.2)">
+        <div class="settings-title" style="color:var(--red)">Danger Zone</div>
+        <p style="font-size:13px;color:var(--td);margin-bottom:14px">These actions are irreversible. Be careful.</p>
+        <button class="action-btn danger" onclick="clearAllPosts()">Clear All Posts</button>
+        <button class="action-btn danger" onclick="resetDatabase()">Reset Database</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Confirm level change modal -->
+<div class="modal-ov" id="level-modal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-ttl">Change Level</div>
+      <button class="modal-x" onclick="closeModal('level-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--td);margin-bottom:14px">Changing user level affects their badge, permissions and XP display.</p>
+      <div class="sg"><label class="sl">User</label><div id="lm-user" style="font-size:14px;font-weight:700"></div></div>
+      <div class="sg"><label class="sl">New Level</label>
+        <select class="si" id="lm-level">
+          <option value="beginner">Beginner</option>
+          <option value="amateur">Amateur</option>
+          <option value="pro">Pro</option>
+          <option value="elite">Elite</option>
+          <option value="coach">Coach</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm" onclick="closeModal('level-modal')">Cancel</button>
+      <button class="btn-sm primary" onclick="confirmLevelChange()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── AUTH ────────────────────────────────────────
+let adminUser = null;
+
+function gateLogin(){
+  const username = document.getElementById('gate-user').value.trim();
+  const password = document.getElementById('gate-pass').value;
+  const res = TNS_DB.login(username, password);
+  if(!res.ok){ document.getElementById('gate-err').textContent = res.error; return; }
+  if(res.user.level !== 'coach' && res.user.level !== 'admin'){
+    document.getElementById('gate-err').textContent = 'Access denied. Admin/Coach accounts only.';
+    TNS_DB.logout();
+    return;
+  }
+  adminUser = res.user;
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('admin-username').textContent = '@' + adminUser.username;
+  init();
+}
+
+function adminLogout(){ TNS_DB.logout(); window.location.href='index.html'; }
+
+// ─── INIT ────────────────────────────────────────
+function init(){
+  refreshDashboard();
+  renderUsers();
+  renderPosts();
+  renderPayments();
+  renderReports();
+  loadSettings();
+  updateSidebarCounts();
+}
+
+function updateSidebarCounts(){
+  const stats = TNS_DB.getAdminStats();
+  document.getElementById('sl-users-cnt').textContent = stats.totalUsers;
+  document.getElementById('sl-posts-cnt').textContent = stats.totalPosts;
+  const openReports = stats.openReports;
+  document.getElementById('sl-reports-cnt').textContent = openReports;
+  const rb = document.getElementById('report-badge');
+  if(openReports > 0){ rb.textContent = openReports; rb.style.display='inline'; }
+  else rb.style.display='none';
+}
+
+// ─── PAGE NAV ────────────────────────────────────
+function showPage(id, topBtn, slBtn){
+  document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.atop-link').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.asl-item').forEach(b=>b.classList.remove('active'));
+  if(topBtn) topBtn.classList.add('active');
+  if(slBtn) slBtn.classList.add('active');
+  // Refresh on navigate
+  if(id==='dashboard') refreshDashboard();
+  if(id==='users') renderUsers();
+  if(id==='posts') renderPosts();
+  if(id==='payments') renderPayments();
+  if(id==='reports') renderReports();
+  if(id==='settings') loadSettings();
+}
+
+// ─── DASHBOARD ───────────────────────────────────
+function refreshDashboard(){
+  const stats = TNS_DB.getAdminStats();
+  document.getElementById('stat-cards').innerHTML = [
+    { icon:'👥', label:'Total Members', num: stats.totalUsers, change: '+' + stats.newUsersToday + ' today', up: stats.newUsersToday > 0 },
+    { icon:'📝', label:'Total Posts', num: stats.totalPosts, change: '+' + stats.newPostsToday + ' today', up: stats.newPostsToday > 0 },
+    { icon:'💰', label:'Total Revenue', num: '₹' + stats.totalRevenue.toLocaleString(), change: stats.pendingPayments + ' pending', up: false },
+    { icon:'⚠️', label:'Open Reports', num: stats.openReports, change: 'Needs review', up: false },
+  ].map(s => `
+    <div class="sc">
+      <div class="sc-icon">${s.icon}</div>
+      <div class="sc-lbl">${s.label}</div>
+      <div class="sc-num">${s.num}</div>
+      <div class="sc-change ${s.up?'up':''}">${s.change}</div>
+    </div>`).join('');
+
+  // Level chart
+  const lb = stats.levelBreakdown;
+  const total = Math.max(1, Object.values(lb).reduce((a,b)=>a+b,0));
+  const levels = [
+    { key:'beginner', label:'Beg', color:'#38bdf8' },
+    { key:'amateur', label:'Ama', color:'#f97316' },
+    { key:'pro', label:'Pro', color:'#f5c518' },
+    { key:'elite', label:'Eli', color:'#e8102a' },
+    { key:'coach', label:'Cch', color:'#a78bfa' },
+  ];
+  const maxVal = Math.max(...levels.map(l=>lb[l.key]||0), 1);
+  document.getElementById('level-chart').innerHTML = `
+    <div class="bar-chart">${levels.map(l=>`
+      <div class="bar" style="height:${Math.max(8,(lb[l.key]||0)/maxVal*100)}%;background:${l.color}22;border:1px solid ${l.color}44" onmouseover="this.style.background='${l.color}66'" onmouseout="this.style.background='${l.color}22'">
+        <div class="bar-tip">${l.label}: ${lb[l.key]||0}</div>
+      </div>`).join('')}</div>
+    <div class="bar-lbls">${levels.map(l=>`<div class="bar-lbl" style="color:${l.color}">${l.label}<br>${lb[l.key]||0}</div>`).join('')}</div>`;
+
+  // Revenue summary
+  const txns = TNS_DB.getAllTransactions();
+  const paid = txns.filter(t=>t.status==='paid');
+  const byType = {};
+  paid.forEach(t=>{ byType[t.type]=(byType[t.type]||0)+t.amount; });
+  document.getElementById('revenue-summary').innerHTML = Object.keys(byType).length
+    ? Object.entries(byType).map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
+          <span style="text-transform:capitalize;font-size:13px;color:var(--td)">${k}</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:700;color:var(--gold)">₹${v.toLocaleString()}</span>
+        </div>`).join('')
+    : '<div style="color:var(--tm);font-size:13px;padding:20px 0;text-align:center">No revenue yet</div>';
+
+  // Recent users
+  const users = TNS_DB.getAllUsers().sort((a,b)=>new Date(b.joined)-new Date(a.joined)).slice(0,8);
+  document.getElementById('recent-users').innerHTML = users.map(u=>`
+    <tr>
+      <td><div style="font-weight:700">${u.name}</div><div style="font-size:11px;color:var(--td)">@${u.username}</div></td>
+      <td><span class="badge b-${u.level}">${u.level}</span></td>
+      <td style="color:var(--td)">${u.city||'—'}</td>
+      <td style="color:var(--td)">${TNS_DB._timeAgo(u.joined)}</td>
+      <td style="color:var(--gold);font-weight:700">${(u.xp||0).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+// ─── USERS ───────────────────────────────────────
+let allUsers = [];
+function renderUsers(filter=''){
+  allUsers = TNS_DB.getAllUsers();
+  const filtered = filter ? allUsers.filter(u=>
+    u.name.toLowerCase().includes(filter.toLowerCase()) ||
+    u.username.toLowerCase().includes(filter.toLowerCase()) ||
+    (u.email||'').toLowerCase().includes(filter.toLowerCase())
+  ) : allUsers;
+  document.getElementById('users-count-sub').textContent = `${filtered.length} of ${allUsers.length} members`;
+  document.getElementById('users-table').innerHTML = filtered.map(u=>`
+    <tr id="user-row-${u.id}">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#000;flex-shrink:0;overflow:hidden">
+            ${u.profilePic ? `<img src="${u.profilePic}" style="width:100%;height:100%;object-fit:cover">` : (u.avatar || u.name.slice(0,2).toUpperCase())}
+          </div>
+          <div><div style="font-weight:700">${u.name}</div><div style="font-size:11px;color:var(--td)">@${u.username} · ${u.email}</div></div>
+        </div>
+      </td>
+      <td>
+        <select class="level-select" onchange="changeLevel('${u.id}',this.value)">
+          ${['beginner','amateur','pro','elite','coach','admin'].map(l=>`<option value="${l}" ${u.level===l?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </td>
+      <td style="color:var(--td)">${u.city||'—'}</td>
+      <td style="color:var(--gold);font-weight:700">${(u.xp||0).toLocaleString()}</td>
+      <td style="color:var(--td)">${u.postCount||0}</td>
+      <td style="color:var(--td);font-size:12px">${TNS_DB._timeAgo(u.joined)}</td>
+      <td>${u.banned ? '<span class="badge b-banned">Banned</span>' : '<span style="font-size:11px;color:var(--em)">Active</span>'}</td>
+      <td>
+        <button class="action-btn ${u.banned?'success':'danger'}" onclick="toggleBan('${u.id}')">${u.banned?'Unban':'Ban'}</button>
+        <button class="action-btn" onclick="viewUserPosts('${u.id}')"><i class="fa-solid fa-newspaper"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers(val){ renderUsers(val); }
+
+function changeLevel(userId, level){
+  const res = TNS_DB.setUserLevel(userId, level);
+  if(res.ok) toast('Level updated ✓','s');
+  else toast('Error updating level','e');
+  updateSidebarCounts();
+}
+
+function toggleBan(userId){
+  const res = TNS_DB.banUser(userId);
+  if(res.ok){ toast(res.banned ? 'User banned' : 'User unbanned','s'); renderUsers(document.getElementById('user-search').value); }
+  else toast('Error','e');
+}
+
+function viewUserPosts(userId){
+  showPage('posts',null,null);
+  const user = TNS_DB.getUser(userId);
+  if(user) toast('Filtering posts by @'+user.username,'i');
+  renderPosts(userId);
+}
+
+// ─── POSTS ───────────────────────────────────────
+let allPosts = [];
+function renderPosts(authorFilter=null){
+  allPosts = TNS_DB.getPosts({sort:'new', authorId: authorFilter||undefined});
+  renderPostsTable(allPosts);
+}
+
+function renderPostsTable(posts){
+  document.getElementById('posts-table').innerHTML = posts.map(p=>{
+    const author = TNS_DB.getUser(p.authorId);
+    return `<tr>
+      <td>
+        <div style="max-width:280px">
+          ${p.pinned?'<span class="pin-tag"><i class="fa-solid fa-thumbtack"></i> PINNED</span> ':''}
+          <div style="font-weight:700;margin-top:4px">${p.title.length>60?p.title.slice(0,60)+'...':p.title}</div>
+        </div>
+      </td>
+      <td><div style="font-weight:600">@${author?author.username:'deleted'}</div><span class="badge b-${author?author.level:'beginner'}">${author?author.level:'?'}</span></td>
+      <td style="color:var(--td);font-size:12px">${p.category}</td>
+      <td style="color:var(--gold);font-weight:700">${p.votes}</td>
+      <td style="color:var(--td)">${p.commentCount}</td>
+      <td style="color:var(--td);font-size:12px">${TNS_DB._timeAgo(p.ts)}</td>
+      <td>
+        <button class="action-btn" onclick="togglePin('${p.id}',${!p.pinned})">${p.pinned?'Unpin':'Pin'}</button>
+        <button class="action-btn danger" onclick="deletePost('${p.id}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPosts(val){
+  const filtered = allPosts.filter(p=>p.title.toLowerCase().includes(val.toLowerCase())||(p.body||'').toLowerCase().includes(val.toLowerCase()));
+  renderPostsTable(filtered);
+}
+
+function togglePin(postId, pin){
+  TNS_DB.pinPost(postId, pin);
+  toast(pin?'Post pinned 📌':'Post unpinned','s');
+  renderPosts();
+}
+
+function deletePost(postId){
+  if(!confirm('Delete this post? This cannot be undone.')) return;
+  // Admin can delete any post - temporarily set as admin
+  TNS_DB.deletePost(postId);
+  toast('Post deleted','s');
+  renderPosts();
+  updateSidebarCounts();
+}
+
+// ─── PAYMENTS ────────────────────────────────────
+let allTxns = [];
+function renderPayments(statusFilter=''){
+  allTxns = TNS_DB.getAllTransactions();
+  const paid = allTxns.filter(t=>t.status==='paid');
+  const pending = allTxns.filter(t=>t.status==='pending');
+  const totalRev = paid.reduce((s,t)=>s+t.amount,0);
+
+  document.getElementById('payment-stat-cards').innerHTML = [
+    { icon:'💰', label:'Total Revenue', num:'₹'+totalRev.toLocaleString(), sub: paid.length+' paid txns' },
+    { icon:'⏳', label:'Pending', num: pending.length, sub:'Needs confirmation' },
+    { icon:'📊', label:'Total Txns', num: allTxns.length, sub:'All time' },
+  ].map(s=>`<div class="sc"><div class="sc-icon">${s.icon}</div><div class="sc-lbl">${s.label}</div><div class="sc-num">${s.num}</div><div class="sc-change">${s.sub}</div></div>`).join('');
+
+  const filtered = statusFilter ? allTxns.filter(t=>t.status===statusFilter) : allTxns;
+  document.getElementById('payments-table').innerHTML = filtered.map(t=>`
+    <tr>
+      <td style="font-size:12px;color:var(--td)">${new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td><div style="font-weight:600">${t.userName}</div><div style="font-size:11px;color:var(--td)">${t.userEmail}</div></td>
+      <td style="max-width:200px"><div style="font-weight:600;font-size:12px">${t.itemName}</div></td>
+      <td style="color:var(--td);font-size:12px;text-transform:capitalize">${t.type}</td>
+      <td style="font-family:var(--display);font-size:18px;font-weight:700;color:var(--gold)">₹${t.amount.toLocaleString()}</td>
+      <td><span class="badge b-${t.status}">${t.status}</span></td>
+      <td style="font-size:11px;color:var(--td);max-width:120px;word-break:break-all">${t.upiRef||'—'}</td>
+      <td>
+        ${t.status==='pending'?`<button class="action-btn success" onclick="manualConfirm('${t.id}')">Confirm</button>`:''}
+        ${t.status==='paid'?`<button class="action-btn" onclick="viewReceipt('${t.id}')">Receipt</button>`:''}
+      </td>
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--tm)">No transactions found</td></tr>';
+}
+
+function filterPayments(status){ renderPayments(status); }
+
+function manualConfirm(txnId){
+  const ref = prompt('Enter UPI Transaction ID to confirm:');
+  if(!ref) return;
+  TNS_DB.confirmPayment(txnId, ref);
+  toast('Payment confirmed ✓','s');
+  renderPayments();
+}
+
+function viewReceipt(txnId){
+  const r = TNS_DB.generateReceipt(txnId);
+  if(!r) return;
+  alert(`Receipt: ${r.receiptNumber}\nUser: ${r.userName}\nItem: ${r.itemName}\nAmount: ₹${r.amount}\nUPI Ref: ${r.upiRef||'—'}\nPaid: ${r.paidAt ? new Date(r.paidAt).toLocaleString('en-IN') : '—'}`);
+}
+
+function exportPayments(){
+  const txns = TNS_DB.getAllTransactions();
+  const rows = [['Date','User','Email','Item','Type','Amount','Status','UPI Ref']];
+  txns.forEach(t=>rows.push([
+    new Date(t.ts).toLocaleDateString('en-IN'), t.userName, t.userEmail,
+    '"'+t.itemName+'"', t.type, t.amount, t.status, t.upiRef||''
+  ]));
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='tns-payments-'+Date.now()+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Exported ✓','s');
+}
+
+// ─── REPORTS ─────────────────────────────────────
+function renderReports(){
+  const reports = TNS_DB.getReports().sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const open = reports.filter(r=>!r.resolved);
+  document.getElementById('reports-list').innerHTML = reports.length ? reports.map(r=>{
+    const reporter = r.reporterId !== 'anon' ? TNS_DB.getUser(r.reporterId) : null;
+    return `<div class="report-card ${r.resolved?'resolved':''}">
+      <div class="report-icon ${r.type==='post'?'post':''}"><i class="fa-solid fa-${r.type==='post'?'newspaper':'comment'}"></i></div>
+      <div class="report-info">
+        <div class="report-type">${r.type} report${r.resolved?' · resolved':''}</div>
+        <div class="report-reason">${r.reason}</div>
+        <div class="report-meta">Reported by @${reporter?reporter.username:'anonymous'} · ${TNS_DB._timeAgo(r.ts)} · ID: ${r.targetId}</div>
+      </div>
+      <div class="report-actions">
+        ${!r.resolved ? `<button class="action-btn success" onclick="resolveReport('${r.id}')">Resolve</button>` : ''}
+        <button class="action-btn danger" onclick="deleteReportedContent('${r.type}','${r.targetId}','${r.id}')">Delete Content</button>
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:40px;color:var(--tm)">✅ No reports to review</div>';
+  updateSidebarCounts();
+}
+
+function resolveReport(reportId){ TNS_DB.resolveReport(reportId); toast('Marked as resolved','s'); renderReports(); }
+
+function deleteReportedContent(type,id,reportId){
+  if(!confirm('Delete this '+type+'? Cannot be undone.')) return;
+  if(type==='post') TNS_DB.deletePost(id);
+  else if(type==='comment') TNS_DB.deleteComment(id);
+  TNS_DB.resolveReport(reportId);
+  toast('Content deleted','s');
+  renderReports(); renderPosts();
+}
+
+// ─── SETTINGS ────────────────────────────────────
+function loadSettings(){
+  const s = TNS_DB.getSettings();
+  document.getElementById('set-upi-id').value = s.upiId||'';
+  document.getElementById('set-upi-name').value = s.upiName||'';
+  document.getElementById('set-pin').value = s.adminPin||'';
+}
+
+function saveSettings(){
+  TNS_DB.saveSettings({
+    upiId: document.getElementById('set-upi-id').value.trim(),
+    upiName: document.getElementById('set-upi-name').value.trim(),
+    adminPin: document.getElementById('set-pin').value.trim(),
+  });
+  toast('Settings saved ✓','s');
+}
+
+function clearAllPosts(){
+  if(!confirm('Delete ALL posts? This cannot be undone!')) return;
+  if(!confirm('Are you SURE? All community posts will be lost.')) return;
+  localStorage.removeItem('tns_posts');
+  localStorage.removeItem('tns_comments');
+  localStorage.removeItem('tns_votes');
+  toast('All posts cleared','s');
+  renderPosts(); updateSidebarCounts();
+}
+
+function resetDatabase(){
+  if(!confirm('RESET ENTIRE DATABASE? All users, posts, and data will be lost!')) return;
+  if(prompt('Type RESET to confirm:') !== 'RESET') return;
+  Object.keys(localStorage).filter(k=>k.startsWith('tns_')).forEach(k=>localStorage.removeItem(k));
+  toast('Database reset. Reloading...','e');
+  setTimeout(()=>window.location.reload(),1500);
+}
+
+// ─── LEVEL MODAL ─────────────────────────────────
+let levelChangeTarget = null;
+function openLevelModal(userId){
+  const u = TNS_DB.getUser(userId);
+  if(!u) return;
+  levelChangeTarget = userId;
+  document.getElementById('lm-user').textContent = u.name + ' (@'+u.username+')';
+  document.getElementById('lm-level').value = u.level;
+  document.getElementById('level-modal').classList.add('on');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+function confirmLevelChange(){
+  if(!levelChangeTarget) return;
+  const level = document.getElementById('lm-level').value;
+  TNS_DB.setUserLevel(levelChangeTarget, level);
+  toast('Level updated ✓','s');
+  closeModal('level-modal');
+  renderUsers();
+}
+
+// ─── TOAST ──────────────────────────────────────
+function toast(msg, type='s'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = type + ' show';
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── CHECK IF ALREADY LOGGED IN ─────────────────
+let adminUser = null;
+
+async function gateLogin(){
+  const user = document.getElementById('gate-user').value.trim();
+  const pass = document.getElementById('gate-pass').value;
+  const errDiv = document.getElementById('gate-err');
+  
+  if(!user || !pass){
+    errDiv.textContent = 'Please enter username and password';
+    return;
+  }
+
+  try {
+    const res = await TNS_DB.login(user, pass);
+    if(!res.ok){
+      errDiv.textContent = res.error || 'Invalid credentials';
+      return;
+    }
+
+    // Check if user is admin or coach
+    if(res.user.level !== 'coach' && res.user.level !== 'admin'){
+      await TNS_DB.logout();
+      errDiv.textContent = '⛔ Only coaches and admins can access this panel';
+      return;
+    }
+
+    adminUser = res.user;
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('admin-username').textContent = '@' + res.user.username;
+    init();
+  } catch(e){
+    errDiv.textContent = 'Error: ' + e.message;
+  }
+}
+
+window.addEventListener('load', async () => {
+  try {
+    await TNS_DB.waitReady();
+    const u = TNS_DB.getCurrentUser();
+    if(u && (u.level === 'coach' || u.level === 'admin')){
+      adminUser = u;
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('admin-username').textContent = '@' + u.username;
+      init();
+    }
+  } catch(e) {
+    console.error('Auth check failed:', e);
+  }
+});
+</script>
+</body>
+</html>

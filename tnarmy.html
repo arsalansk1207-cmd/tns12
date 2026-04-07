@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TNS Army — Athlete Directory</title>
+<meta name="description" content="Meet the TNS Army. 300+ arm wrestling athletes from Pune and across India. Join the movement.">
+<link rel="icon" href="TNS-Logo-6.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-backend.js"></script>
+<style>
+/* ── RESET & TOKENS ─────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --y:#f5c518;--y2:#ffd84d;--yg:rgba(245,197,24,.15);
+  --dk:#08080f;--c1:#111118;--c2:#18181f;--c3:#1e1e28;
+  --br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.13);
+  --tx:#f0f0f8;--mu:#7a7a9a;--mu2:#4a4a6a;
+  --fn:'Outfit',sans-serif;--fd:'Teko',sans-serif;
+  --gn:#22c55e;--rd:#ef4444;--bl:#3b82f6;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dk);color:var(--tx);font-family:var(--fn);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--fn);cursor:pointer;border:none;outline:none}
+input,select{font-family:var(--fn);outline:none}
+
+/* ── NAV ───────────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:300;padding:0 5vw;height:64px;display:flex;align-items:center;gap:20px;transition:background .3s,border-color .3s}
+.nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--br)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo img{width:40px;height:40px;border-radius:50%;border:2px solid var(--y);object-fit:cover}
+.nav-brand{font-family:var(--fd);font-size:26px;font-weight:700;letter-spacing:1px;line-height:1}
+.nav-brand span{color:var(--y)}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--mu);transition:all .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--tx);background:rgba(255,255,255,.06)}
+.nav-links a.active{color:var(--y)}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:8px}
+.nbtn{padding:9px 20px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none}
+.nbtn-y{background:var(--y);color:#000}.nbtn-y:hover{background:var(--y2);transform:translateY(-1px)}
+.nbtn-o{background:transparent;border:1.5px solid var(--br2);color:var(--tx)}.nbtn-o:hover{border-color:var(--y);color:var(--y)}
+.nav-avatar-btn{display:flex;align-items:center;gap:8px;background:var(--c1);border:1.5px solid var(--br2);border-radius:100px;padding:5px 14px 5px 5px;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;transition:all .2s}
+.nav-avatar-btn:hover{background:var(--c2);border-color:var(--y)}
+.nav-avatar-btn img{width:32px;height:32px;border-radius:50%;border:2px solid var(--y);object-fit:cover}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;background:none;border:none}
+.hamburger span{width:22px;height:2px;background:var(--tx);border-radius:2px;transition:all .3s;display:block}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.98);backdrop-filter:blur(20px);z-index:299;padding:20px 5vw;flex-direction:column;gap:4px;overflow-y:auto}
+.mob-nav.open{display:flex}
+.mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:var(--mu);border:1px solid transparent;transition:all .2s}
+.mob-nav a:hover{color:var(--tx);background:var(--c1);border-color:var(--br)}
+.mob-nav-btns{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--br)}
+.mob-nav-btns button{padding:14px;border-radius:12px;font-size:15px;font-weight:600;text-align:center;border:none}
+
+/* ── TICKER ────────────────────────────────── */
+.ticker{background:var(--y);height:40px;display:flex;align-items:center;overflow:hidden;margin-top:64px}
+.t-track{display:flex;animation:tick 30s linear infinite;white-space:nowrap}
+.t-track:hover{animation-play-state:paused}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-item{display:inline-flex;align-items:center;gap:10px;padding:0 36px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#000}
+.t-sep{opacity:.4;font-size:9px;color:#000}
+
+/* ── HERO ──────────────────────────────────── */
+.hero{position:relative;min-height:80vh;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 20%}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(8,8,15,.98) 0%,rgba(8,8,15,.85) 50%,rgba(8,8,15,.4) 100%)}
+.hero-bg::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,197,24,.055) 1px,transparent 1px);background-size:36px 36px;z-index:1;pointer-events:none}
+.hero-content{position:relative;z-index:2;padding:88px 5vw 80px;max-width:780px;width:100%}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);border-radius:100px;padding:6px 16px;margin-bottom:22px}
+.pill-dot{width:7px;height:7px;background:var(--y);border-radius:50%;animation:blink 1.8s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.55)}}
+.hero-pill span{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--y)}
+.hero h1{font-family:var(--fd);font-size:clamp(72px,14vw,140px);line-height:.86;font-weight:700;text-transform:uppercase;margin-bottom:16px;letter-spacing:1px}
+.hero h1 em{color:var(--y);font-style:normal;text-shadow:0 0 80px rgba(245,197,24,.6)}
+.hero-sub{font-size:17px;font-weight:300;color:rgba(240,240,248,.65);line-height:1.7;max-width:460px;margin-bottom:28px}
+.hero-chips{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--tx)}
+.chip-num{font-family:var(--fd);font-size:22px;color:var(--y);line-height:1;font-weight:700}
+.hero-search{display:flex;gap:10px;max-width:620px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:220px;position:relative}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:14px;pointer-events:none}
+.search-input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--br2);border-radius:12px;padding:13px 14px 13px 40px;font-size:14px;color:var(--tx);transition:border .25s}
+.search-input::placeholder{color:var(--mu)}
+.search-input:focus{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.04)}
+.filter-select{background:rgba(255,255,255,.05);border:1.5px solid var(--br2);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--tx);min-width:148px;transition:border .25s;appearance:none;cursor:pointer}
+.filter-select:focus{border-color:rgba(245,197,24,.5)}
+.filter-select option{background:var(--c2)}
+.btn-y{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;background:var(--y);border-radius:12px;font-size:15px;font-weight:700;color:#000;transition:all .25s;border:none;cursor:pointer}
+.btn-y:hover{background:var(--y2);transform:translateY(-2px);box-shadow:0 10px 32px rgba(245,197,24,.35)}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border:1.5px solid var(--br2);border-radius:12px;font-size:15px;font-weight:600;color:rgba(255,255,255,.75);transition:all .25s;background:transparent;cursor:pointer}
+.btn-ghost:hover{border-color:rgba(255,255,255,.4);color:#fff}
+
+/* ── COMMON SECTION ────────────────────────── */
+.container{max-width:1200px;margin:0 auto}
+.s-label{font-size:11px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:var(--y);margin-bottom:10px}
+.s-title{font-family:var(--fd);font-size:clamp(36px,5vw,62px);font-weight:700;text-transform:uppercase;line-height:.95;margin-bottom:14px}
+.s-sub{font-size:15px;font-weight:300;color:var(--mu);line-height:1.75;max-width:520px}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.reveal.vis{opacity:1;transform:none}
+
+/* ── TAGS ──────────────────────────────────── */
+.tag{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;display:inline-block}
+.tag-elite{background:rgba(245,197,24,.12);color:var(--y);border:1px solid rgba(245,197,24,.25)}
+.tag-pro{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.tag-beginner{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.tag-champ{background:rgba(245,197,24,.15);color:var(--y);border:1px solid rgba(245,197,24,.3)}
+.tag-active{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.tag-new{background:rgba(249,115,22,.1);color:#fb923c;border:1px solid rgba(249,115,22,.2)}
+.tag-wt{background:rgba(255,255,255,.05);color:var(--mu);border:1px solid var(--br)}
+
+/* ── TRENDING ──────────────────────────────── */
+.trending-section{padding:72px 5vw;background:var(--c1)}
+.trending-scroll{display:flex;gap:16px;overflow-x:auto;padding:4px 0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;margin-top:36px}
+.trending-scroll::-webkit-scrollbar{display:none}
+.tc{flex:0 0 252px;scroll-snap-align:start;background:var(--dk);border:1px solid var(--br);border-radius:20px;overflow:hidden;transition:all .32s;cursor:pointer;position:relative}
+.tc:hover{border-color:rgba(245,197,24,.4);transform:translateY(-5px);box-shadow:0 20px 48px rgba(245,197,24,.12)}
+.tc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--y);opacity:0;transition:opacity .3s}
+.tc:hover::before{opacity:1}
+.tc-img{position:relative;height:155px;overflow:hidden}
+.tc-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.tc:hover .tc-img img{transform:scale(1.08)}
+.tc-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,15,.92) 0%,transparent 60%)}
+.tc-fire{position:absolute;top:10px;left:10px;background:var(--y);color:#000;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;z-index:2}
+.tc-rank{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(8,8,15,.85);border:1.5px solid var(--y);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:17px;font-weight:700;color:var(--y);z-index:2}
+.tc-body{padding:16px 18px}
+.tc-name{font-family:var(--fd);font-size:21px;font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.tc-handle{font-size:11px;color:var(--mu);margin-bottom:10px}
+.tc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tc-stats{display:flex;gap:12px}
+.tc-stat-n{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--y);line-height:1}
+.tc-stat-l{font-size:10px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+
+/* ── LEADERBOARD ────────────────────────────── */
+.lb-section{padding:72px 5vw}
+.lb-table{background:var(--c1);border:1px solid var(--br);border-radius:20px;overflow:hidden;margin-top:36px}
+.lb-row{display:grid;grid-template-columns:50px 1fr 90px 90px 90px 120px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--br);transition:background .2s;cursor:pointer;gap:10px}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover{background:rgba(245,197,24,.04)}
+.lb-head{background:var(--c2);cursor:default!important}
+.lb-head:hover{background:var(--c2)!important}
+.lb-rank{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--mu);text-align:center}
+.r1{color:var(--y)!important;text-shadow:0 0 14px rgba(245,197,24,.55)}
+.r2{color:#bbb!important}
+.r3{color:#c96a1e!important}
+.lb-ath{display:flex;align-items:center;gap:10px}
+.lb-av{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--br2);flex-shrink:0}
+.lb-av.gold{border-color:var(--y)}
+.lb-nm{font-weight:600;font-size:14px}
+.lb-hnd{font-size:11px;color:var(--mu);margin-top:1px}
+.lb-v{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--tx);text-align:center}
+.lb-v.w{color:var(--y)}
+.lb-v.l{color:#f87171}
+.lb-hl{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);text-align:center}
+.lb-hl.tl{text-align:left}
+
+/* ── ATHLETE GRID ───────────────────────────── */
+.athletes-section{padding:72px 5vw;background:var(--c1)}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 24px;align-items:center}
+.filter-bar .search-wrap{flex:1;min-width:200px}
+.res-count{font-size:13px;color:var(--mu);margin-left:auto;white-space:nowrap}
+.a-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px}
+.a-card{background:var(--dk);border:1px solid var(--br);border-radius:20px;overflow:hidden;transition:all .3s;cursor:pointer;position:relative}
+.a-card:hover{border-color:rgba(245,197,24,.35);transform:translateY(-5px);box-shadow:0 18px 48px rgba(245,197,24,.1)}
+.a-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:transparent;transition:background .3s;z-index:2}
+.a-card:hover::before{background:var(--y)}
+.a-img{position:relative;height:175px;overflow:hidden}
+.a-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.a-card:hover .a-img img{transform:scale(1.07)}
+.a-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,15,.95) 0%,rgba(8,8,15,.15) 60%,transparent 100%)}
+.a-badge-wrap{position:absolute;top:10px;right:10px;z-index:3}
+.lock-hover{position:absolute;inset:0;background:rgba(8,8,15,.55);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .28s;pointer-events:none;z-index:10;border-radius:20px}
+.a-card:hover .lock-hover{opacity:1}
+.lh-icon{font-size:26px;color:var(--y)}
+.lh-txt{font-size:12px;font-weight:600;color:#fff;text-align:center;padding:0 16px}
+.a-body{padding:16px 18px 18px}
+.a-name{font-family:var(--fd);font-size:21px;font-weight:700;text-transform:uppercase;margin-bottom:2px;line-height:1.1}
+.a-handle{font-size:11px;color:var(--mu);margin-bottom:10px}
+.a-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.a-stats{display:flex;gap:0;padding:10px 0;border-top:1px solid var(--br);border-bottom:1px solid var(--br);margin-bottom:14px}
+.a-s{flex:1;text-align:center}
+.a-s:not(:last-child){border-right:1px solid var(--br)}
+.a-s-n{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--y);line-height:1}
+.a-s-l{font-size:10px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.a-btn{width:100%;padding:10px;border-radius:11px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(245,197,24,.07);border:1.5px solid rgba(245,197,24,.2);color:var(--y);transition:all .25s}
+.a-card:hover .a-btn{background:var(--y);color:#000;border-color:var(--y)}
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--c2) 25%,var(--c3) 50%,var(--c2) 75%);background-size:200% 100%;animation:shim 1.4s infinite}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-card{background:var(--c1);border:1px solid var(--br);border-radius:20px;overflow:hidden}
+.sk-img{height:175px}.sk-body{padding:16px 18px}
+.sk-ln{height:13px;border-radius:6px;margin-bottom:10px}
+.w60{width:60%}.w40{width:40%}.w80{width:80%}
+.no-res{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--mu)}
+.no-res i{font-size:48px;margin-bottom:16px;display:block;color:var(--mu2)}
+
+/* ── MODALS / OVERLAYS ──────────────────────── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(16px);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.ov.open{opacity:1;pointer-events:all}
+.modal{background:var(--c1);border:1px solid var(--br2);border-radius:24px;width:100%;position:relative;transform:scale(.93) translateY(20px);transition:transform .38s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto}
+.ov.open .modal{transform:none}
+.m-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:var(--c2);border:1px solid var(--br);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mu);cursor:pointer;transition:all .2s;z-index:10}
+.m-close:hover{background:rgba(245,197,24,.15);color:var(--y);border-color:rgba(245,197,24,.3)}
+
+/* auth modal */
+.auth-modal{max-width:460px;padding:38px}
+.auth-tabs{display:flex;gap:0;background:var(--c2);border-radius:12px;padding:4px;margin-bottom:26px}
+.auth-tab{flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:600;color:var(--mu);background:none;border:none;cursor:pointer;transition:all .25s;text-align:center}
+.auth-tab.on{background:var(--y);color:#000}
+.fg{margin-bottom:14px}
+.fl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:7px;display:block}
+.fi{width:100%;background:var(--c2);border:1px solid var(--br2);border-radius:10px;padding:12px 15px;font-size:14px;color:var(--tx);transition:border .2s}
+.fi:focus{border-color:rgba(245,197,24,.45)}
+.fsub{width:100%;padding:14px;background:var(--y);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:all .25s;margin-top:4px}
+.fsub:hover{background:var(--y2);transform:translateY(-1px)}
+.adiv{text-align:center;font-size:12px;color:var(--mu);margin:14px 0;position:relative}
+.adiv::before,.adiv::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--br2)}
+.adiv::before{left:0}.adiv::after{right:0}
+.a-social{display:flex;gap:8px}
+.a-soc-btn{flex:1;padding:11px;background:var(--c2);border:1px solid var(--br2);border-radius:10px;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.a-soc-btn:hover{border-color:var(--y);color:var(--y)}
+
+/* locked modal */
+.locked-modal{max-width:480px}
+.lk-img-wrap{position:relative;overflow:hidden}
+.lk-img{width:100%;height:210px;object-fit:cover;filter:blur(12px);transform:scale(1.12);opacity:.45}
+.lk-over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(8,8,15,.45)}
+.lk-icon-big{font-size:44px;color:var(--y)}
+.lk-title{font-family:var(--fd);font-size:30px;font-weight:700;text-transform:uppercase;text-align:center;line-height:1.05}
+.lk-desc{font-size:13px;color:rgba(240,240,248,.6);text-align:center;padding:0 24px}
+.lk-body{padding:24px 26px 30px}
+.lk-prev{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.lk-prev-img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--y);filter:blur(4px)}
+.lk-prev-name{font-family:var(--fd);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:5px}
+.lk-stats{display:flex;gap:10px;margin-bottom:16px}
+.lk-stat{flex:1;text-align:center;background:var(--c2);border-radius:10px;padding:10px;filter:blur(3px);pointer-events:none}
+.lk-sn{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--y)}
+.lk-sl{font-size:10px;color:var(--mu);letter-spacing:1px;text-transform:uppercase}
+.lk-note{font-size:13px;color:var(--mu);margin-bottom:18px;line-height:1.7}
+.lk-btns{display:flex;gap:10px}
+
+/* full profile modal */
+.prof-modal{max-width:680px}
+.p-hero{width:100%;height:250px;object-fit:cover;object-position:top center}
+.p-fade{background:linear-gradient(to top,var(--c1) 0%,transparent 100%);height:72px;margin-top:-72px;position:relative;z-index:1}
+.p-body{padding:0 26px 30px;margin-top:-20px;position:relative;z-index:2}
+.p-top{display:flex;align-items:flex-end;gap:14px;margin-bottom:18px}
+.p-av{width:78px;height:78px;border-radius:50%;border:3px solid var(--y);object-fit:cover;flex-shrink:0;box-shadow:0 0 28px rgba(245,197,24,.38)}
+.p-nw{flex:1;padding-bottom:4px}
+.p-name{font-family:var(--fd);font-size:36px;font-weight:700;text-transform:uppercase;line-height:1;margin-bottom:3px}
+.p-handle{font-size:13px;color:var(--mu);margin-bottom:7px}
+.p-tags{display:flex;gap:6px;flex-wrap:wrap}
+.p-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--br2);border-radius:14px;overflow:hidden;margin-bottom:22px;border:1px solid var(--br2)}
+.pst{background:var(--c2);padding:13px;text-align:center}
+.psn{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--y);line-height:1}
+.psl{font-size:10px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+/* profile tabs */
+.pt-wrap{display:flex;gap:0;background:var(--c2);border-radius:12px;padding:4px;margin-bottom:18px}
+.pt{flex:1;padding:8px 6px;border-radius:9px;font-size:12px;font-weight:600;color:var(--mu);background:none;border:none;cursor:pointer;transition:all .25s;text-align:center}
+.pt.on{background:var(--y);color:#000}
+.pp{display:none}.pp.on{display:block}
+.p-bio{font-size:14px;color:rgba(240,240,248,.7);line-height:1.8;margin-bottom:14px}
+.p-drow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.p-det{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);background:var(--c2);border:1px solid var(--br);border-radius:8px;padding:6px 11px}
+.p-det i{color:var(--y);font-size:11px}
+.match-list{display:flex;flex-direction:column;gap:8px}
+.mr{display:flex;align-items:center;gap:10px;background:var(--c2);border:1px solid var(--br);border-radius:11px;padding:10px 14px}
+.mr-res{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.mr-w{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.mr-l{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.mr-opp{flex:1;font-size:13px;font-weight:600}
+.mr-ev{font-size:11px;color:var(--mu);margin-top:1px}
+.mr-wt{font-size:11px;color:var(--y);flex-shrink:0}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mi{aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--c2);position:relative;cursor:pointer}
+.mi img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.mi:hover img{transform:scale(1.08)}
+.mi-ov{position:absolute;inset:0;background:rgba(8,8,15,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;font-size:18px;color:#fff}
+.mi:hover .mi-ov{opacity:1}
+.soc-links{display:flex;flex-direction:column;gap:9px}
+.sl{display:flex;align-items:center;gap:11px;background:var(--c2);border:1px solid var(--br);border-radius:12px;padding:13px 16px;transition:all .2s;cursor:pointer}
+.sl:hover{border-color:var(--y);background:rgba(245,197,24,.05)}
+.sl i{font-size:20px;width:22px;text-align:center}
+.sl-ig i{color:#e1306c}.sl-wa i{color:#25d366}.sl-yt i{color:red}
+.sl-name{font-size:13px;font-weight:600}
+.sl-hnd{font-size:11px;color:var(--mu);margin-top:1px}
+
+/* sticky mobile CTA */
+.stick-cta{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;white-space:nowrap;box-shadow:0 8px 32px rgba(245,197,24,.45);border-radius:100px}
+
+/* footer */
+footer{background:var(--c1);border-top:1px solid var(--br);padding:56px 5vw 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.f-logo{font-family:var(--fd);font-size:30px;font-weight:700;letter-spacing:1px;margin-bottom:12px}
+.f-logo span{color:var(--y)}
+.f-about{font-size:14px;color:var(--mu);line-height:1.75;margin-bottom:20px}
+.f-social{display:flex;gap:8px}
+.fsb{width:36px;height:36px;border-radius:9px;background:var(--c2);border:1px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mu);transition:all .2s;text-decoration:none}
+.fsb:hover{background:var(--y);border-color:var(--y);color:#000}
+.f-heading{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mu);margin-bottom:14px}
+.f-links{display:flex;flex-direction:column;gap:9px}
+.f-link{font-size:14px;color:rgba(240,240,248,.5);transition:color .2s;display:flex;align-items:center;gap:7px}
+.f-link:hover{color:var(--y)}
+.f-bot{border-top:1px solid var(--br);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mu);flex-wrap:wrap;gap:12px}
+.f-bls{display:flex;gap:16px}
+.f-bl{color:var(--mu);transition:color .2s;cursor:pointer;font-size:12px;text-decoration:none}
+.f-bl:hover{color:var(--tx)}
+
+/* toast */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--c1);border:1px solid rgba(34,197,94,.4);color:#4ade80;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;transform:translateY(60px);opacity:0;transition:all .35s;display:flex;align-items:center;gap:8px}
+.toast.on{transform:none;opacity:1}
+.toast.warn{border-color:rgba(245,197,24,.4);color:var(--y)}
+
+/* responsive */
+@media(max-width:1024px){
+  .lb-row{grid-template-columns:44px 1fr 80px 80px 100px;gap:8px}
+  .lb-row>:nth-child(5){display:none}
+}
+@media(max-width:768px){
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
+  .hero h1{font-size:clamp(60px,16vw,100px)}
+  .a-grid{grid-template-columns:repeat(auto-fill,minmax(156px,1fr))}
+  .lb-row{grid-template-columns:38px 1fr 68px 68px;padding:10px 14px}
+  .lb-row>:nth-child(5),.lb-row>:nth-child(6){display:none}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  .stick-cta{display:inline-flex}
+  .p-stats{grid-template-columns:repeat(2,1fr)}
+  .media-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:480px){
+  .hero-search{flex-direction:column}
+  .filter-select{width:100%}
+  .footer-grid{grid-template-columns:1fr}
+  .p-top{flex-direction:column;align-items:flex-start}
+  .lk-btns{flex-direction:column}
+  .a-social{flex-direction:column}
+  .media-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* === TNS UNIVERSAL NAV === */
+.tns-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;padding:0 20px;display:flex;align-items:center;gap:16px;transition:background .3s,border .3s}
+.tns-nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.tns-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.tns-nav-logo img{width:38px;height:38px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-nav-brand{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:#f0f0f8;line-height:1}
+.tns-nav-brand span{color:#f5c518}
+.tns-nav-links{display:flex;gap:2px;margin-left:auto}
+.tns-nav-links a{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;color:#7a7a9a;text-decoration:none;transition:all .2s}
+.tns-nav-links a:hover{color:#f0f0f8;background:rgba(255,255,255,.07)}
+.tns-nav-links a.tns-active{color:#f5c518;background:rgba(245,197,24,.08)}
+.tns-nav-auth{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
+.tns-btn-join{padding:9px 20px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .2s;white-space:nowrap;display:inline-block}
+.tns-btn-join:hover{background:#ffd84d}
+.tns-btn-signin{padding:9px 16px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-size:13px;font-weight:600;color:#f0f0f8;text-decoration:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;display:inline-block}
+.tns-btn-signin:hover{border-color:rgba(255,255,255,.4)}
+.tns-user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:#111118;border:1px solid rgba(255,255,255,.08);border-radius:100px;text-decoration:none;transition:border-color .2s;cursor:pointer;flex-shrink:0}
+.tns-user-pill:hover{border-color:rgba(245,197,24,.4)}
+.tns-u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-family:'Teko',sans-serif;font-size:13px;font-weight:700;color:#000;flex-shrink:0;overflow:hidden;border:2px solid #f5c518}
+.tns-u-av img{width:100%;height:100%;object-fit:cover}
+.tns-uname{font-size:13px;font-weight:600;color:#f0f0f8}
+.tns-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;flex-shrink:0}
+.tns-ham span{width:22px;height:2px;background:#f0f0f8;border-radius:2px;transition:all .3s;display:block}
+.tns-ham.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.tns-ham.open span:nth-child(2){opacity:0}
+.tns-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.tns-mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.99);backdrop-filter:blur(24px);z-index:199;padding:20px 16px;flex-direction:column;gap:4px;overflow-y:auto}
+.tns-mob-nav.open{display:flex}
+.tns-mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:#7a7a9a;text-decoration:none;border:1px solid transparent;transition:all .2s}
+.tns-mob-nav a:hover{color:#f0f0f8;background:#111118;border-color:rgba(255,255,255,.07)}
+.tns-mob-nav a.tns-active{color:#f5c518;background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.15)}
+.tns-mob-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.tns-mob-join{display:block;padding:15px;background:#f5c518;border-radius:12px;font-size:15px;font-weight:700;color:#000;text-align:center;text-decoration:none;margin-top:8px}
+.tns-mob-prof{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);margin-top:8px;text-decoration:none;cursor:pointer}
+.tns-mob-prof-name{font-size:15px;font-weight:700;color:#f0f0f8}
+.tns-mob-prof-sub{font-size:12px;color:#7a7a9a}
+.tns-mob-signout{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#7a7a9a;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:6px;display:block;text-align:center}
+@media(max-width:768px){.tns-nav-links,.tns-nav-auth{display:none}.tns-ham{display:flex}}
+
+/* === TNS UNIVERSAL FOOTER === */
+.tns-footer{background:#0a0a12;border-top:1px solid rgba(255,255,255,.06);padding:56px 20px 0;margin-top:80px}
+.tns-fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px}
+.tns-fb{display:flex;flex-direction:column;gap:14px}
+.tns-fl{display:flex;align-items:center;gap:12px}
+.tns-fl img{width:44px;height:44px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-fn{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#f0f0f8}
+.tns-fn span{color:#f5c518}
+.tns-fe{font-size:11px;color:#7a7a9a;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.tns-fd{font-size:13px;color:#7a7a9a;line-height:1.7;max-width:260px}
+.tns-fs{display:flex;gap:8px;flex-wrap:wrap}
+.tns-fs a{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#7a7a9a;font-size:15px;transition:all .2s;text-decoration:none}
+.tns-fs a:hover{background:#f5c518;border-color:#f5c518;color:#000}
+.tns-fct{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7a7a9a;margin-bottom:16px}
+.tns-fc{display:flex;flex-direction:column;gap:10px}
+.tns-fc a{font-size:14px;color:rgba(240,240,248,.45);text-decoration:none;transition:color .2s}
+.tns-fc a:hover{color:#f5c518}
+.tns-fc span{font-size:13px;color:rgba(240,240,248,.35);display:flex;align-items:center;gap:6px}
+.tns-fc i{font-size:12px;color:#f5c518}
+.tns-fbot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7a7a9a;max-width:1100px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.tns-fbot a{color:#7a7a9a;text-decoration:none;transition:color .2s}
+.tns-fbot a:hover{color:#f5c518}
+@media(max-width:768px){.tns-fi{grid-template-columns:1fr 1fr;gap:28px}.tns-fb{grid-column:span 2}.tns-footer{margin-top:40px}}
+@media(max-width:480px){.tns-fi{grid-template-columns:1fr}.tns-fb{grid-column:span 1}.tns-fbot{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="tns-nav" id="tns-nav">
+  <a href="index.html" class="tns-nav-logo">
+    <img src="TNS-Logo-6.png" alt="TNS">
+    <div class="tns-nav-brand">TNS<span> AW</span></div>
+  </a>
+  <div class="tns-nav-links">
+    <a href="index.html">Home</a>
+    <a href="training.html">Training</a>
+    <a href="events.html">Events</a>
+    <a href="community.html">Community</a>
+    <a href="tnarmy.html" class="tns-active">TNS Army</a>
+  </div>
+  <div class="tns-nav-auth" id="tns-nav-auth">
+    <a href="auth.html" class="tns-btn-signin">Sign In</a>
+    <a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a>
+  </div>
+  <button class="tns-ham" id="tns-ham" onclick="tnsToggleMob()" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="tns-mob-nav" id="tns-mob-nav">
+  <a href="index.html" onclick="tnsCloseMob()">Home</a>
+  <a href="training.html" onclick="tnsCloseMob()">Training</a>
+  <a href="events.html" onclick="tnsCloseMob()">Events</a>
+  <a href="community.html" onclick="tnsCloseMob()">Community</a>
+  <a href="tnarmy.html" class="tns-active" onclick="tnsCloseMob()">TNS Army</a>
+  <div class="tns-mob-sep"></div>
+  <div id="tns-mob-auth"><a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a></div>
+</div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker"><div class="t-track" id="ticker"></div></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://tnsarmwrestling.com/wp-content/uploads/2023/07/TNS-Arm-wrestling-7-scaled.jpg" alt="TNS Army" id="hero-img">
+  </div>
+  <div class="hero-content">
+    <div class="hero-pill"><div class="pill-dot"></div><span>Athlete Directory · Est. 2017</span></div>
+    <h1>TNS<br><em>ARMY</em></h1>
+    <p class="hero-sub">Meet the athletes. Join the movement. Pune's most elite arm wrestling community — one pull at a time.</p>
+    <div class="hero-chips">
+      <div class="chip">🔥 <span class="chip-num" id="hero-cnt">0</span>+ Athletes</div>
+      <div class="chip">🏆 <span class="chip-num">50</span>+ Events</div>
+      <div class="chip">💪 <span class="chip-num">2017</span> Est.</div>
+    </div>
+    <div class="hero-search">
+      <div class="search-wrap" style="flex:2">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="search-input" id="hs" type="text" placeholder="Search by name or @handle…" oninput="syncQ(this.value)">
+      </div>
+      <select class="filter-select" id="hc" onchange="syncF()">
+        <option value="">All Categories</option>
+        <option>Beginner</option><option>Pro</option><option>Elite</option>
+      </select>
+      <select class="filter-select" id="hw" onchange="syncF()">
+        <option value="">All Weights</option>
+        <option>Under 60kg</option><option>60–70kg</option><option>70–80kg</option>
+        <option>80–90kg</option><option>90–100kg</option><option>100kg+</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDING -->
+<section class="trending-section">
+  <div class="container">
+    <div class="s-label reveal">Most Active</div>
+    <h2 class="s-title reveal">🔥 TRENDING<br><span style="color:var(--y)">ATHLETES</span></h2>
+    <div class="trending-scroll reveal" id="t-scroll"></div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section class="lb-section">
+  <div class="container">
+    <div class="s-label reveal">Rankings</div>
+    <h2 class="s-title reveal">🏆 LEADERBOARD</h2>
+    <p class="s-sub reveal">Ranked by total wins across all TNS events.</p>
+    <div class="lb-table reveal" id="lb-table"></div>
+  </div>
+</section>
+
+<!-- ATHLETE GRID -->
+<section class="athletes-section" id="athletes">
+  <div class="container">
+    <div class="s-label reveal">The Community</div>
+    <h2 class="s-title reveal">ALL<br><span style="color:var(--y)">ATHLETES</span></h2>
+    <div class="filter-bar reveal">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="search-input" id="gs" type="text" placeholder="Search…" oninput="syncQ(this.value)">
+      </div>
+      <select class="filter-select" id="gc" onchange="syncF()">
+        <option value="">All Categories</option>
+        <option>Beginner</option><option>Pro</option><option>Elite</option>
+      </select>
+      <select class="filter-select" id="gw" onchange="syncF()">
+        <option value="">All Weights</option>
+        <option>Under 60kg</option><option>60–70kg</option><option>70–80kg</option>
+        <option>80–90kg</option><option>90–100kg</option><option>100kg+</option>
+      </select>
+      <span class="res-count" id="rc"></span>
+    </div>
+    <div class="a-grid" id="a-grid"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="tns-footer">
+  <div class="tns-fi">
+    <div class="tns-fb">
+      <div class="tns-fl"><img src="TNS-Logo-6.png" alt="TNS"><div><div class="tns-fn">TNS<span> AW</span></div><div class="tns-fe">Est. 2017 · Pune</div></div></div>
+      <p class="tns-fd">Pune's first and premier arm wrestling club. Train. Compete. Dominate.</p>
+      <div class="tns-fs">
+        <a href="https://instagram.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://youtube.com/@tnsarmwrestling" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://facebook.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://linkedin.com/company/tns-arm-wrestling" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="https://wa.me/917387878771" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+    <div><div class="tns-fct">Pages</div><div class="tns-fc"><a href="index.html">Home</a><a href="training.html">Training</a><a href="events.html">Events</a><a href="community.html">Community</a><a href="tnarmy.html">TNS Army</a></div></div>
+    <div><div class="tns-fct">Account</div><div class="tns-fc"><a href="auth.html">Sign In</a><a href="auth.html?mode=register">Join TNS</a><a href="profile.html">My Profile</a><a href="profile.html?tab=history">My Payments</a></div></div>
+    <div><div class="tns-fct">Contact</div><div class="tns-fc"><span><i class="fa-solid fa-location-dot"></i> NIBM Road, Pune</span><span><i class="fa-brands fa-whatsapp"></i><a href="https://wa.me/917387878771">+91 73878 78771</a></span><span><i class="fa-solid fa-envelope"></i><a href="mailto:contact@tnsarmwrestling.com">contact@...</a></span></div></div>
+  </div>
+  <div class="tns-fbot"><span>© 2024 TNS Arm Wrestling. All rights reserved.</span><div style="display:flex;gap:16px"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div></div>
+</footer>
+
+<!-- STICKY CTA (mobile, guests only) -->
+<button class="btn-y stick-cta" id="stick-cta" onclick="openAuth('login')">
+  <i class="fa-solid fa-lock"></i> Login to View Full Profiles
+</button>
+
+<!-- AUTH MODAL -->
+<div class="ov" id="ov-auth" onclick="ovClick(event,'ov-auth')">
+  <div class="modal auth-modal">
+    <button class="m-close" onclick="closeOv('ov-auth')"><i class="fa-solid fa-xmark"></i></button>
+    <div style="margin-bottom:22px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--y);margin-bottom:5px">TNS Army</div>
+      <div style="font-family:var(--fd);font-size:34px;font-weight:700;text-transform:uppercase;line-height:1" id="auth-ttl">Welcome Back</div>
+      <div style="font-size:13px;color:var(--mu);margin-top:5px" id="auth-sub">Log in to unlock full athlete profiles</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="abt-login" onclick="switchAuth('login')">Log In</button>
+      <button class="auth-tab" id="abt-signup" onclick="switchAuth('signup')">Join Army</button>
+    </div>
+    <div id="login-form">
+      <div class="fg"><label class="fl">Email / Username</label><input class="fi" id="l-u" type="text" placeholder="you@email.com or @handle"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="l-p" type="password" placeholder="••••••••"></div>
+      <button class="fsub" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+      <div class="adiv">or continue with</div>
+      <div class="a-social">
+        <button class="a-soc-btn" onclick="doLogin()"><i class="fa-brands fa-google" style="color:#ea4335"></i> Google</button>
+        <button class="a-soc-btn" onclick="doLogin()"><i class="fa-brands fa-instagram" style="color:#e1306c"></i> Instagram</button>
+      </div>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="fl">First Name</label><input class="fi" type="text" placeholder="Rohit"></div>
+        <div class="fg"><label class="fl">Last Name</label><input class="fi" type="text" placeholder="Sharma"></div>
+      </div>
+      <div class="fg"><label class="fl">Username</label><input class="fi" type="text" placeholder="@your_handle"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" placeholder="you@email.com"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="fl">Category</label><select class="fi" style="cursor:pointer"><option>Beginner</option><option>Pro</option><option>Elite</option></select></div>
+        <div class="fg"><label class="fl">Weight Class</label><select class="fi" style="cursor:pointer"><option>Under 60kg</option><option>60–70kg</option><option>70–80kg</option><option>80–90kg</option><option>90–100kg</option><option>100kg+</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" placeholder="Create a strong password"></div>
+      <button class="fsub" onclick="doSignup()"><i class="fa-solid fa-user-plus"></i> Join the TNS Army</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOCKED PROFILE MODAL -->
+<div class="ov" id="ov-locked" onclick="ovClick(event,'ov-locked')">
+  <div class="modal locked-modal">
+    <button class="m-close" onclick="closeOv('ov-locked')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="lk-img-wrap">
+      <img class="lk-img" id="lk-img" src="" alt="">
+      <div class="lk-over">
+        <div class="lk-icon-big">🔒</div>
+        <div class="lk-title">Unlock Full<br>Profile</div>
+        <div class="lk-desc">Log in or join TNS Army to view complete athlete stats, match history, gallery and social links.</div>
+      </div>
+    </div>
+    <div class="lk-body">
+      <div class="lk-prev">
+        <img class="lk-prev-img" id="lk-av" src="" alt="">
+        <div>
+          <div class="lk-prev-name" id="lk-name"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px" id="lk-tags"></div>
+        </div>
+      </div>
+      <div class="lk-stats" id="lk-stats"></div>
+      <p class="lk-note">Join <strong style="color:var(--tx)">300+ athletes</strong> on the TNS Army platform. View full profiles, track rankings and connect with the community.</p>
+      <div class="lk-btns">
+        <button class="btn-y" style="flex:1" onclick="closeOv('ov-locked');openAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+        <button class="btn-ghost" style="flex:1" onclick="closeOv('ov-locked');openAuth('signup')"><i class="fa-solid fa-user-plus"></i> Join Free</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FULL PROFILE MODAL -->
+<div class="ov" id="ov-prof" onclick="ovClick(event,'ov-prof')">
+  <div class="modal prof-modal">
+    <button class="m-close" onclick="closeOv('ov-prof')" style="background:rgba(8,8,15,.75);border:none"><i class="fa-solid fa-xmark"></i></button>
+    <img class="p-hero" id="p-hero" src="" alt="">
+    <div class="p-fade"></div>
+    <div class="p-body">
+      <div class="p-top">
+        <img class="p-av" id="p-av" src="" alt="">
+        <div class="p-nw">
+          <div class="p-name" id="p-nm"></div>
+          <div class="p-handle" id="p-hnd"></div>
+          <div class="p-tags" id="p-tgs"></div>
+        </div>
+      </div>
+      <div class="p-stats" id="p-sts"></div>
+      <div class="pt-wrap">
+        <button class="pt on" onclick="switchPT('about',this)">About</button>
+        <button class="pt" onclick="switchPT('matches',this)">Matches</button>
+        <button class="pt" onclick="switchPT('media',this)">Media</button>
+        <button class="pt" onclick="switchPT('social',this)">Social</button>
+      </div>
+      <div class="pp on" id="pp-about"></div>
+      <div class="pp" id="pp-matches"></div>
+      <div class="pp" id="pp-media"></div>
+      <div class="pp" id="pp-social"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════
+   STATE
+═══════════════════════ */
+let isLoggedIn = false;
+let fQ='', fCat='', fWt='';
+
+/* ═══════════════════════
+   DATA
+═══════════════════════ */
+const B='https://tnsarmwrestling.com/wp-content/uploads/2023/07';
+const P=[1,2,3,4,7,8,9,10,11,12,13,14,15,18,20].map(n=>`${B}/TNS-Arm-wrestling-${n}-scaled.jpg`);
+
+const ATHLETES=[
+  {id:1,name:'Aavez Shaikh',handle:'@aavez_tns',cat:'Elite',wt:'80–90kg',badge:'Champion',wins:42,losses:6,rank:1,hot:true,img:P[4],bio:'Founder of TNS Arm Wrestling. Started the movement in Pune in 2017. Right hand specialist with a deadly top roll. Multiple city champion.',exp:'9 years',city:'Pune',ig:'@aavez_tns',yt:'TNS Arm Wrestling',matches:[{o:'Rahul Kale',ev:'Pune Open 2025',r:'win',w:'85kg'},{o:'Amit Patil',ev:'Winter Clash 2025',r:'win',w:'85kg'},{o:'Suresh Nair',ev:'Spring Showdown',r:'loss',w:'85kg'}]},
+  {id:2,name:'Rohit Sharma',handle:'@rohit_pull',cat:'Elite',wt:'80–90kg',badge:'Champion',wins:38,losses:8,rank:2,hot:true,img:P[6],bio:'Pune Open 2025 champion in the 85kg category. Known for explosive starting power and a devastating hook. Training with TNS since 2020.',exp:'6 years',city:'Pune',ig:'@rohit_pull',yt:'',matches:[{o:'Dev Pawar',ev:'Pune Open 2025',r:'win',w:'85kg'},{o:'Aavez Shaikh',ev:'Pune Championship',r:'loss',w:'85kg'},{o:'Kiran Desai',ev:'Winter Clash',r:'win',w:'85kg'}]},
+  {id:3,name:'Priya Desai',handle:'@priya_iron',cat:'Pro',wt:'60–70kg',badge:'Champion',wins:29,losses:4,rank:3,hot:true,img:P[2],bio:'Women\'s division champion — TNS Winter Clash 2025. One of the strongest female arm wrestlers in Maharashtra. Technical and precise.',exp:'4 years',city:'Pune',ig:'@priya_iron',yt:'',matches:[{o:'Sneha Kulkarni',ev:'Winter Clash 2025',r:'win',w:'60kg'},{o:'Aisha Mehta',ev:'Spring Showdown',r:'win',w:'60kg'},{o:'Sneha Kulkarni',ev:'Summer Cup',r:'win',w:'60kg'}]},
+  {id:4,name:'Akash More',handle:'@akash_force',cat:'Elite',wt:'70–80kg',badge:'Active',wins:31,losses:12,rank:4,hot:true,img:P[9],bio:'Silver medalist at Pune Open 2025. Incredibly consistent with strong wrist control. Trains 5 days a week at TNS Gym.',exp:'5 years',city:'Pune',ig:'@akash_force',yt:'',matches:[{o:'Rohit Sharma',ev:'Pune Open 2025',r:'loss',w:'75kg'},{o:'Vijay Rao',ev:'Winter Clash',r:'win',w:'75kg'},{o:'Dev Pawar',ev:'TNS Cup',r:'win',w:'75kg'}]},
+  {id:5,name:'Suraj Patil',handle:'@suraj_beast',cat:'Pro',wt:'100kg+',badge:'Active',wins:24,losses:9,rank:5,hot:true,img:P[11],bio:'The biggest man in TNS. Super-heavyweight specialist with raw pulling power. Bronze medalist Spring Showdown 2025.',exp:'3 years',city:'Pune',ig:'@suraj_beast',yt:'',matches:[{o:'Navneet Singh',ev:'Spring Showdown',r:'win',w:'100kg+'},{o:'Aavez Shaikh',ev:'Pune Open',r:'loss',w:'100kg+'},{o:'Ganesh Patil',ev:'Winter Clash',r:'win',w:'100kg+'}]},
+  {id:6,name:'Kiran Desai',handle:'@kiran_arm',cat:'Pro',wt:'70–80kg',badge:'Active',wins:19,losses:10,rank:6,hot:false,img:P[0],bio:'Consistent top-5 finisher in the 75kg bracket. Known for lateral pull and superior conditioning.',exp:'4 years',city:'Nashik',ig:'@kiran_arm',yt:'',matches:[{o:'Akash More',ev:'TNS Cup',r:'loss',w:'75kg'},{o:'Dev Pawar',ev:'Pune Open',r:'win',w:'75kg'}]},
+  {id:7,name:'Dev Pawar',handle:'@dev_power',cat:'Pro',wt:'60–70kg',badge:'Active',wins:17,losses:8,rank:7,hot:false,img:P[7],bio:'Fast and technical. Known for quick start and top roll. Represents college arm wrestling in Pune.',exp:'3 years',city:'Pune',ig:'@dev_power',yt:'',matches:[{o:'Kiran Desai',ev:'Pune Open',r:'loss',w:'65kg'},{o:'Ravi More',ev:'College Battle',r:'win',w:'65kg'}]},
+  {id:8,name:'Sneha Kulkarni',handle:'@sneha_strong',cat:'Pro',wt:'Under 60kg',badge:'Active',wins:15,losses:6,rank:8,hot:false,img:P[1],bio:'Women\'s 60kg specialist. Runner-up Winter Clash 2025. Rising star in the Maharashtra arm wrestling circuit.',exp:'2 years',city:'Pune',ig:'@sneha_strong',yt:'',matches:[{o:'Priya Desai',ev:'Winter Clash',r:'loss',w:'60kg'},{o:'Aisha Mehta',ev:'Spring Showdown',r:'win',w:'60kg'}]},
+  {id:9,name:'Navneet Singh',handle:'@nav_heavy',cat:'Pro',wt:'100kg+',badge:'Active',wins:13,losses:11,rank:9,hot:false,img:P[12],bio:'Mumbai-based competitor who travels to Pune for TNS events. Powerful and improving every season.',exp:'4 years',city:'Mumbai',ig:'@nav_heavy',yt:'',matches:[{o:'Suraj Patil',ev:'Spring Showdown',r:'loss',w:'100kg+'},{o:'Ganesh Patil',ev:'TNS Cup',r:'win',w:'100kg+'}]},
+  {id:10,name:'Ravi More',handle:'@ravi_tns',cat:'Beginner',wt:'60–70kg',badge:'New',wins:5,losses:3,rank:10,hot:false,img:P[13],bio:'Joined TNS in 2025. Fast learner with natural grip strength. Already competing in local events.',exp:'1 year',city:'Pune',ig:'@ravi_tns',yt:'',matches:[{o:'Dev Pawar',ev:'College Battle',r:'loss',w:'65kg'},{o:'Arjun Shah',ev:'New Year Rumble',r:'win',w:'65kg'}]},
+  {id:11,name:'Vijay Rao',handle:'@vijay_pull',cat:'Pro',wt:'80–90kg',badge:'Active',wins:21,losses:14,rank:11,hot:false,img:P[3],bio:'Veteran of Pune arm wrestling scene. Steady performer across multiple weight categories.',exp:'5 years',city:'Pune',ig:'@vijay_pull',yt:'',matches:[{o:'Akash More',ev:'Winter Clash',r:'loss',w:'80kg'},{o:'Suraj Patil',ev:'TNS Cup',r:'win',w:'85kg'}]},
+  {id:12,name:'Arjun Shah',handle:'@arjun_arm',cat:'Beginner',wt:'70–80kg',badge:'New',wins:3,losses:5,rank:12,hot:false,img:P[8],bio:'Newest member of the TNS Army. Competing in his debut season with raw strength and plenty of heart.',exp:'6 months',city:'Pune',ig:'@arjun_arm',yt:'',matches:[{o:'Ravi More',ev:'New Year Rumble',r:'loss',w:'70kg'},{o:'Ganesh Patil',ev:'College Battle',r:'loss',w:'70kg'}]},
+  {id:13,name:'Ganesh Patil',handle:'@ganesh_beast',cat:'Pro',wt:'90–100kg',badge:'Active',wins:18,losses:9,rank:13,hot:false,img:P[5],bio:'Strong 90kg competitor from Solapur. Competes across Maharashtra.',exp:'3 years',city:'Solapur',ig:'@ganesh_beast',yt:'',matches:[{o:'Suraj Patil',ev:'Winter Clash',r:'loss',w:'95kg'},{o:'Navneet Singh',ev:'TNS Cup',r:'loss',w:'95kg'}]},
+  {id:14,name:'Aisha Mehta',handle:'@aisha_pull',cat:'Beginner',wt:'Under 60kg',badge:'New',wins:4,losses:4,rank:14,hot:false,img:P[10],bio:'Women\'s beginner rising star. Consistent improvement with every competition.',exp:'1 year',city:'Pune',ig:'@aisha_pull',yt:'',matches:[{o:'Priya Desai',ev:'Spring Showdown',r:'loss',w:'55kg'},{o:'Sneha Kulkarni',ev:'Spring Showdown',r:'loss',w:'55kg'}]},
+  {id:15,name:'Rahul Kale',handle:'@rahul_iron',cat:'Elite',wt:'80–90kg',badge:'Active',wins:28,losses:15,rank:15,hot:false,img:P[14],bio:'Elite 85kg competitor with national-level experience.',exp:'7 years',city:'Pune',ig:'@rahul_iron',yt:'',matches:[{o:'Aavez Shaikh',ev:'Pune Open',r:'loss',w:'85kg'},{o:'Vijay Rao',ev:'Winter Clash',r:'win',w:'85kg'}]},
+];
+
+/* ═══════════════════════
+   TAG HELPERS
+═══════════════════════ */
+function tCat(c){const m={Elite:'tag-elite',Pro:'tag-pro',Beginner:'tag-beginner'};return`<span class="tag ${m[c]||'tag-pro'}">${c}</span>`;}
+function tBadge(b){const m={Champion:'tag-champ',Active:'tag-active',New:'tag-new'};return`<span class="tag ${m[b]||'tag-active'}">${b==='Champion'?'🏆 ':''}${b}</span>`;}
+
+/* ═══════════════════════
+   FILTER
+═══════════════════════ */
+function getFiltered(){
+  return ATHLETES.filter(a=>{
+    const q=fQ.toLowerCase();
+    return(!q||a.name.toLowerCase().includes(q)||a.handle.toLowerCase().includes(q))&&
+           (!fCat||a.cat===fCat)&&(!fWt||a.wt===fWt);
+  });
+}
+function syncQ(v){fQ=v;['hs','gs'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=v;});renderGrid();}
+function syncF(){
+  fCat=document.getElementById('gc').value||document.getElementById('hc').value;
+  fWt=document.getElementById('gw').value||document.getElementById('hw').value;
+  ['gc','hc'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=fCat;});
+  ['gw','hw'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=fWt;});
+  renderGrid();
+}
+
+/* ═══════════════════════
+   TRENDING
+═══════════════════════ */
+function renderTrending(){
+  document.getElementById('t-scroll').innerHTML=ATHLETES.filter(a=>a.hot).map((a,i)=>`
+    <div class="tc" onclick="viewProfile(${a.id})">
+      <div class="tc-img">
+        <img src="${a.img}" alt="${a.name}" loading="lazy" onerror="this.src='${P[4]}'">
+        <div class="tc-fire">🔥 Trending</div>
+        <div class="tc-rank">#${a.rank}</div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-name">${a.name}</div>
+        <div class="tc-handle">${a.handle}</div>
+        <div class="tc-tags">${tCat(a.cat)}${tBadge(a.badge)}</div>
+        <div class="tc-stats">
+          <div><div class="tc-stat-n">${a.wins}</div><div class="tc-stat-l">Wins</div></div>
+          <div><div class="tc-stat-n">#${a.rank}</div><div class="tc-stat-l">Rank</div></div>
+          <div><div class="tc-stat-n">${a.wt.replace('kg','').split('–')[0]||a.wt.replace(/[^0-9+]/g,'').slice(0,3)}</div><div class="tc-stat-l">kg</div></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════
+   LEADERBOARD
+═══════════════════════ */
+function renderLB(){
+  const top=[...ATHLETES].sort((a,b)=>b.wins-a.wins).slice(0,8);
+  const head=`<div class="lb-row lb-head"><div class="lb-hl">#</div><div class="lb-hl tl">Athlete</div><div class="lb-hl">Wins</div><div class="lb-hl">Losses</div><div class="lb-hl">Win%</div><div class="lb-hl">Category</div></div>`;
+  const rows=top.map((a,i)=>{
+    const r=i+1,rc=r===1?'r1':r===2?'r2':r===3?'r3':'';
+    const rk=r<=3?['🥇','🥈','🥉'][r-1]:r;
+    return`<div class="lb-row" onclick="viewProfile(${a.id})">
+      <div class="lb-rank ${rc}">${rk}</div>
+      <div class="lb-ath"><img class="lb-av ${r===1?'gold':''}" src="${a.img}" loading="lazy" onerror="this.src='${P[4]}'"><div><div class="lb-nm">${a.name}</div><div class="lb-hnd">${a.handle}</div></div></div>
+      <div class="lb-v w">${a.wins}</div>
+      <div class="lb-v l">${a.losses}</div>
+      <div class="lb-v">${Math.round(a.wins/(a.wins+a.losses)*100)}%</div>
+      <div>${tCat(a.cat)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('lb-table').innerHTML=head+rows;
+}
+
+/* ═══════════════════════
+   SKELETON
+═══════════════════════ */
+function renderSkel(){
+  document.getElementById('a-grid').innerHTML=Array(8).fill(0).map(()=>`
+    <div class="sk-card"><div class="sk-img sk"></div>
+    <div class="sk-body"><div class="sk-ln w80 sk"></div><div class="sk-ln w40 sk"></div><div class="sk-ln w60 sk" style="margin-top:14px"></div></div></div>`).join('');
+}
+
+/* ═══════════════════════
+   ATHLETE GRID
+═══════════════════════ */
+function renderGrid(){
+  const list=getFiltered();
+  document.getElementById('rc').textContent=`${list.length} athlete${list.length!==1?'s':''} found`;
+  if(!list.length){
+    document.getElementById('a-grid').innerHTML=`<div class="no-res"><i class="fa-solid fa-user-slash"></i><div style="font-family:var(--fd);font-size:26px;margin-bottom:6px">No Athletes Found</div><div>Try adjusting filters.</div></div>`;
+    return;
+  }
+  document.getElementById('a-grid').innerHTML=list.map(a=>`
+    <div class="a-card" onclick="viewProfile(${a.id})">
+      <div class="a-img">
+        <img src="${a.img}" alt="${a.name}" loading="lazy" onerror="this.src='${P[4]}'">
+        <div class="a-badge-wrap">${tBadge(a.badge)}</div>
+      </div>
+      ${!isLoggedIn?`<div class="lock-hover"><div class="lh-icon"><i class="fa-solid fa-lock"></i></div><div class="lh-txt">Login to view full profile</div></div>`:''}
+      <div class="a-body">
+        <div class="a-name">${a.name}</div>
+        <div class="a-handle">${a.handle}</div>
+        <div class="a-tags">${tCat(a.cat)}<span class="tag tag-wt">${a.wt}</span></div>
+        <div class="a-stats">
+          <div class="a-s"><div class="a-s-n">${a.wins}</div><div class="a-s-l">Wins</div></div>
+          <div class="a-s"><div class="a-s-n">#${a.rank}</div><div class="a-s-l">Rank</div></div>
+          <div class="a-s"><div class="a-s-n">${a.losses}</div><div class="a-s-l">Losses</div></div>
+        </div>
+        <button class="a-btn">View Profile ${isLoggedIn?'<i class="fa-solid fa-arrow-right"></i>':'<i class="fa-solid fa-lock"></i>'}</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════
+   PROFILE OPEN
+═══════════════════════ */
+function viewProfile(id){
+  const a=ATHLETES.find(x=>x.id===id);
+  if(!a)return;
+  if(!isLoggedIn){showLocked(a);return;}
+  showFull(a);
+}
+function showLocked(a){
+  document.getElementById('lk-img').src=a.img;
+  document.getElementById('lk-av').src=a.img;
+  document.getElementById('lk-name').textContent=a.name;
+  document.getElementById('lk-tags').innerHTML=tCat(a.cat)+tBadge(a.badge);
+  document.getElementById('lk-stats').innerHTML=`
+    <div class="lk-stat"><div class="lk-sn">${a.wins}</div><div class="lk-sl">Wins</div></div>
+    <div class="lk-stat"><div class="lk-sn">#${a.rank}</div><div class="lk-sl">Rank</div></div>
+    <div class="lk-stat"><div class="lk-sn">${a.losses}</div><div class="lk-sl">Losses</div></div>`;
+  openOv('ov-locked');
+}
+function showFull(a){
+  document.getElementById('p-hero').src=a.img;
+  document.getElementById('p-av').src=a.img;
+  document.getElementById('p-nm').textContent=a.name;
+  document.getElementById('p-hnd').textContent=a.handle;
+  document.getElementById('p-tgs').innerHTML=tCat(a.cat)+tBadge(a.badge);
+  const wr=Math.round(a.wins/(a.wins+a.losses)*100);
+  document.getElementById('p-sts').innerHTML=`
+    <div class="pst"><div class="psn">${a.wins}</div><div class="psl">Wins</div></div>
+    <div class="pst"><div class="psn" style="color:#f87171">${a.losses}</div><div class="psl">Losses</div></div>
+    <div class="pst"><div class="psn">#${a.rank}</div><div class="psl">Rank</div></div>
+    <div class="pst"><div class="psn">${wr}%</div><div class="psl">Win Rate</div></div>`;
+  document.getElementById('pp-about').innerHTML=`
+    <p class="p-bio">${a.bio}</p>
+    <div class="p-drow">
+      <div class="p-det"><i class="fa-solid fa-dumbbell"></i>${a.exp} experience</div>
+      <div class="p-det"><i class="fa-solid fa-location-dot"></i>${a.city}</div>
+      <div class="p-det"><i class="fa-solid fa-weight-scale"></i>${a.wt}</div>
+      <div class="p-det"><i class="fa-solid fa-layer-group"></i>${a.cat}</div>
+    </div>`;
+  document.getElementById('pp-matches').innerHTML=`<div class="match-list">${a.matches.map(m=>`
+    <div class="mr">
+      <div class="mr-res ${m.r==='win'?'mr-w':'mr-l'}">${m.r==='win'?'W':'L'}</div>
+      <div><div class="mr-opp">vs ${m.o}</div><div class="mr-ev">${m.ev}</div></div>
+      <div class="mr-wt">${m.w}</div>
+    </div>`).join('')}</div>`;
+  const mPics=[a.img,...P.filter(p=>p!==a.img).slice(0,5)];
+  document.getElementById('pp-media').innerHTML=`<div class="media-grid">${mPics.map(p=>`
+    <div class="mi"><img src="${p}" loading="lazy" onerror="this.style.display='none'"><div class="mi-ov"><i class="fa-solid fa-expand"></i></div></div>`).join('')}</div>`;
+  document.getElementById('pp-social').innerHTML=`<div class="soc-links">
+    ${a.ig?`<div class="sl sl-ig" onclick="window.open('https://instagram.com/${a.ig.replace('@','')}','_blank')"><i class="fa-brands fa-instagram"></i><div><div class="sl-name">Instagram</div><div class="sl-hnd">${a.ig}</div></div><i class="fa-solid fa-arrow-up-right-from-square" style="margin-left:auto;font-size:11px;color:var(--mu)"></i></div>`:''}
+    <div class="sl sl-wa" onclick="window.open('https://wa.me/917387878771','_blank')"><i class="fa-brands fa-whatsapp"></i><div><div class="sl-name">WhatsApp TNS</div><div class="sl-hnd">+91 73878 78771</div></div></div>
+    ${a.yt?`<div class="sl sl-yt"><i class="fa-brands fa-youtube"></i><div><div class="sl-name">YouTube</div><div class="sl-hnd">${a.yt}</div></div></div>`:''}
+  </div>`;
+  // reset tabs
+  document.querySelectorAll('.pt').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pp').forEach(p=>{p.classList.remove('on');p.style.display='none';});
+  document.querySelector('.pt').classList.add('on');
+  const ab=document.getElementById('pp-about');
+  ab.classList.add('on');ab.style.display='block';
+  openOv('ov-prof');
+}
+function switchPT(name,btn){
+  document.querySelectorAll('.pt').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pp').forEach(p=>{p.classList.remove('on');p.style.display='none';});
+  btn.classList.add('on');
+  const p=document.getElementById('pp-'+name);
+  p.classList.add('on');p.style.display='block';
+}
+
+/* ═══════════════════════
+   AUTH
+═══════════════════════ */
+function openAuth(tab){switchAuth(tab);openOv('ov-auth');}
+function switchAuth(tab){
+  document.getElementById('abt-login').classList.toggle('on',tab==='login');
+  document.getElementById('abt-signup').classList.toggle('on',tab==='signup');
+  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
+  document.getElementById('signup-form').style.display=tab==='signup'?'block':'none';
+  document.getElementById('auth-ttl').textContent=tab==='login'?'Welcome Back':'Join TNS Army';
+  document.getElementById('auth-sub').textContent=tab==='login'?'Log in to unlock full athlete profiles':'Create your free athlete profile';
+}
+function doLogin(){
+  const u=document.getElementById('l-u').value.trim();
+  const p=document.getElementById('l-p').value.trim();
+  if(!u||!p){showToast('Enter your credentials','warn');return;}
+  isLoggedIn=true;closeOv('ov-auth');updateAuthUI();renderGrid();showToast('✅ Welcome back to TNS Army!');
+}
+function doSignup(){
+  isLoggedIn=true;closeOv('ov-auth');updateAuthUI();renderGrid();showToast('🏆 Welcome to the TNS Army!');
+}
+function doLogout(){
+  isLoggedIn=false;updateAuthUI();renderGrid();showToast('👋 Logged out successfully');
+}
+function updateAuthUI(){
+  const nr=document.getElementById('nav-right');
+  const mb=document.getElementById('mob-btns');
+  const sc=document.getElementById('stick-cta');
+  if(isLoggedIn){
+    nr.innerHTML=`<button class="nav-avatar-btn" onclick="doLogout()"><img src="${P[4]}" alt="me"><span>My Profile</span><i class="fa-solid fa-chevron-down" style="font-size:9px;color:var(--mu)"></i></button>`;
+    mb.innerHTML=`<button class="nbtn nbtn-o" style="width:100%;justify-content:center" onclick="closeMob();doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>`;
+    sc.style.display='none';
+  } else {
+    nr.innerHTML=`<button class="nbtn nbtn-o" onclick="openAuth('login')">Log In</button><button class="nbtn nbtn-y" onclick="openAuth('signup')"><i class="fa-solid fa-user-plus"></i> Join Army</button>`;
+    mb.innerHTML=`<button class="nbtn nbtn-o" style="width:100%;justify-content:center;border:1.5px solid var(--br2)" onclick="closeMob();openAuth('login')">Log In</button><button class="nbtn nbtn-y" style="width:100%;justify-content:center" onclick="closeMob();openAuth('signup')"><i class="fa-solid fa-user-plus"></i> Join Army</button>`;
+    sc.style.display='';
+  }
+}
+
+/* ═══════════════════════
+   OVERLAY
+═══════════════════════ */
+function openOv(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeOv(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+function ovClick(e,id){if(e.target===document.getElementById(id))closeOv(id);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['ov-auth','ov-locked','ov-prof'].forEach(closeOv);document.body.style.overflow='';}});
+
+/* ═══════════════════════
+   NAV
+═══════════════════════ */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('stuck',scrollY>40),{passive:true});
+function toggleMob(){document.getElementById('ham').classList.toggle('open');document.getElementById('mob-nav').classList.toggle('open');document.body.style.overflow=document.getElementById('mob-nav').classList.contains('open')?'hidden':'';}
+function closeMob(){document.getElementById('ham').classList.remove('open');document.getElementById('mob-nav').classList.remove('open');document.body.style.overflow='';}
+
+/* ═══════════════════════
+   HERO IMG CYCLE
+═══════════════════════ */
+let hi=0;
+setInterval(()=>{
+  const el=document.getElementById('hero-img');
+  el.style.transition='opacity .9s';el.style.opacity='0';
+  hi=(hi+1)%5;
+  setTimeout(()=>{el.src=P[hi];el.style.opacity='1';},900);
+},6000);
+
+/* ═══════════════════════
+   COUNTER
+═══════════════════════ */
+function animCnt(el,target,dur=1600){let s=0;const step=target/dur*16;const t=setInterval(()=>{s=Math.min(s+step,target);el.textContent=Math.floor(s);if(s>=target)clearInterval(t);},16);}
+new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target._obs.unobserve(e.target);animCnt(document.getElementById('hero-cnt'),312);}}),{threshold:.2}).observe(Object.assign(document.querySelector('.hero'),{_obs:new IntersectionObserver(()=>{})}));
+// simpler approach
+setTimeout(()=>animCnt(document.getElementById('hero-cnt'),312),400);
+
+/* ═══════════════════════
+   TICKER
+═══════════════════════ */
+const ticks=['🔥 TNS Army · 300+ Athletes Registered','⚡ Multifit Showdown · April 11 · Register Now','💪 Pune\'s First Arm Wrestling Club — Est. 2017','🤝 Official Decathlon & MultiFit Partner','🏆 Train · Compete · Dominate · Represent'];
+const td=[...ticks,...ticks];
+document.getElementById('ticker').innerHTML=td.map(t=>`<div class="t-item">${t}<span class="t-sep">✦</span></div>`).join('');
+
+/* ═══════════════════════
+   REVEAL
+═══════════════════════ */
+const ro=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('vis')),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* ═══════════════════════
+   TOAST
+═══════════════════════ */
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(type?' '+type:'');
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3500);
+}
+
+/* ═══════════════════════
+   INIT
+═══════════════════════ */
+renderSkel();
+setTimeout(()=>{renderTrending();renderLB();renderGrid();},750);
+updateAuthUI();
+</script>
+
+</body>
+</html>

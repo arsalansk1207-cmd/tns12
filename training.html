@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Program — TNS Arm Wrestling</title>
+<meta name="description" content="Master the art of arm wrestling. Join India's #1 arm wrestling academy. Beginner to certified trainer programs — online & accessible worldwide.">
+<link rel="icon" href="TNS-Logo-6.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-backend.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#f5c518;
+  --red2:#ffd84d;
+  --rg:rgba(245,197,24,0.18);
+  --gold:#f5c518;
+  --dark:#08080f;
+  --card:#111118;
+  --card2:#18181f;
+  --border:rgba(255,255,255,0.07);
+  --text:#f0f0f8;
+  --muted:#7a7a9a;
+  --font:'Outfit',sans-serif;
+  --display:'Teko',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:var(--font);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+
+/* ─── NAV ─────────────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5vw;height:64px;display:flex;align-items:center;gap:24px;transition:background .3s,border .3s}
+.nav.stuck{background:rgba(8,8,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo img{width:40px;height:40px;border-radius:50%;border:2px solid var(--red);object-fit:cover}
+.nav-name{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:1px;line-height:1}
+.nav-name span{color:var(--red)}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);transition:all .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(255,255,255,0.06)}
+.nav-links a.active{color:var(--red)}
+.nav-cta{margin-left:8px;padding:9px 22px;background:var(--red);border-radius:10px;font-size:14px;font-weight:600;color:#000;transition:all .2s;white-space:nowrap;border:none;cursor:pointer;display:inline-flex;align-items:center}
+.nav-cta:hover{background:var(--red2);transform:translateY(-1px)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;border:none;background:none}
+.hamburger span{width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s;display:block}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mobile-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,0.98);backdrop-filter:blur(20px);z-index:99;padding:24px 5vw;flex-direction:column;gap:4px}
+.mobile-nav.open{display:flex}
+.mobile-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:var(--muted);border:1px solid transparent;transition:all .2s}
+.mobile-nav a:hover{color:var(--text);background:var(--card);border-color:var(--border)}
+.mobile-nav .m-cta{margin-top:12px;padding:16px;background:var(--red);border-radius:12px;font-size:16px;font-weight:600;color:#000;text-align:center}
+
+/* ─── TICKER ──────────────────────────────────── */
+.ticker{background:var(--red);height:40px;display:flex;align-items:center;overflow:hidden;margin-top:64px}
+.ticker-track{display:flex;animation:tick 28s linear infinite;white-space:nowrap}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 40px;font-size:12.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#000}
+.ticker-sep{opacity:.5;font-size:10px;color:#000}
+
+/* ─── HERO ────────────────────────────────────── */
+.tp-hero{position:relative;min-height:72vh;display:flex;align-items:center;overflow:hidden}
+.tp-hero-bg{position:absolute;inset:0;z-index:0}
+.tp-hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 25%}
+.tp-hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,8,15,.96) 0%,rgba(8,8,15,.78) 55%,rgba(8,8,15,.35) 100%)}
+.tp-hero-content{position:relative;z-index:1;padding:72px 5vw 80px;max-width:700px}
+.tp-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);border-radius:100px;padding:6px 14px;margin-bottom:20px}
+.tp-pill-dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.tp-pill span{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.tp-hero h1{font-family:var(--display);font-size:clamp(52px,8vw,100px);line-height:.92;font-weight:700;text-transform:uppercase;margin-bottom:20px}
+.tp-hero h1 em{color:var(--red);font-style:normal}
+.tp-hero p{font-size:16px;font-weight:300;color:rgba(240,240,248,.7);line-height:1.75;max-width:520px;margin-bottom:32px}
+.tp-hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-red{display:inline-flex;align-items:center;gap:9px;padding:14px 28px;background:var(--red);border-radius:12px;font-size:15px;font-weight:600;color:#000;transition:all .25s;border:none;cursor:pointer}
+.btn-red:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(245,197,24,.35)}
+.btn-outline{display:inline-flex;align-items:center;gap:9px;padding:14px 28px;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;font-size:15px;font-weight:600;color:rgba(255,255,255,.75);transition:all .25s;background:transparent;cursor:pointer}
+.btn-outline:hover{border-color:rgba(255,255,255,.5);color:#fff}
+
+/* ─── PROGRESS PATH ───────────────────────────── */
+.path-section{padding:80px 5vw;background:var(--card)}
+.container{max-width:1140px;margin:0 auto}
+.s-label{font-size:11px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.s-title{font-family:var(--display);font-size:clamp(36px,5vw,64px);font-weight:700;text-transform:uppercase;line-height:.95;margin-bottom:16px}
+.s-sub{font-size:15px;font-weight:300;color:var(--muted);line-height:1.75;max-width:540px;margin-bottom:52px}
+
+/* horizontal path connector */
+.path-track-wrap{position:relative;margin:0 -5vw}
+.path-track-wrap::before,.path-track-wrap::after{content:'';position:absolute;top:0;bottom:32px;width:40px;z-index:2;pointer-events:none}
+.path-track-wrap::before{left:0;background:linear-gradient(90deg,var(--card),transparent)}
+.path-track-wrap::after{right:0;background:linear-gradient(-90deg,var(--card),transparent)}
+.path-track{position:relative;display:flex;gap:0;overflow-x:auto;overflow-y:visible;padding:8px 5vw 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.path-track::-webkit-scrollbar{display:none}
+.path-track::before{content:'';position:absolute;top:44px;left:5vw;right:5vw;height:2px;background:linear-gradient(90deg,var(--red),rgba(245,197,24,.25));z-index:0;pointer-events:none}
+.path-step{flex:0 0 140px;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;padding:0 12px;cursor:pointer;scroll-snap-align:center}
+.path-scroll-hint{display:none;text-align:center;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;margin-bottom:-8px}
+.path-scroll-hint i{animation:hint-bounce 1.5s ease-in-out infinite}
+@keyframes hint-bounce{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+.path-node{width:72px;height:72px;border-radius:50%;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:28px;font-weight:700;color:var(--muted);transition:all .35s;margin-bottom:12px;position:relative}
+.path-step.active .path-node,.path-step:hover .path-node{background:var(--red);border-color:var(--red);color:#000;box-shadow:0 0 32px rgba(245,197,24,.4)}
+.path-step.active .path-node::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(245,197,24,.3);animation:pulse-ring 2s ease-in-out infinite}
+@keyframes pulse-ring{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:0;transform:scale(1.25)}}
+.path-label{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:center;transition:color .3s}
+.path-step.active .path-label,.path-step:hover .path-label{color:var(--red)}
+
+/* ─── PLANS GRID ──────────────────────────────── */
+.plans-section{padding:80px 5vw}
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;gap:0;transition:all .3s;position:relative;overflow:hidden}
+.plan-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border);transition:background .3s}
+.plan-card:hover,.plan-card.featured{border-color:rgba(245,197,24,.3)}
+.plan-card:hover::before,.plan-card.featured::before{background:var(--red)}
+.plan-card.featured{background:linear-gradient(160deg,#1a1808 0%,#111108 100%);border-color:rgba(245,197,24,.4)}
+.plan-card.cert{grid-column:span 1}
+.plan-card.cert-full{grid-column:span 2}
+.plan-badge{position:absolute;top:20px;right:20px;background:var(--red);color:#000;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:20px}
+.plan-icon{font-size:36px;margin-bottom:16px;line-height:1}
+.plan-level{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.plan-name{font-family:var(--display);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.plan-best{font-size:12px;color:var(--muted);margin-bottom:20px}
+.plan-price{font-family:var(--display);font-size:46px;font-weight:700;color:var(--red);line-height:1;margin-bottom:4px}
+.plan-price span{font-family:var(--font);font-size:14px;font-weight:400;color:var(--muted)}
+.plan-price-alt{font-size:12px;color:var(--muted);margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.plan-features{display:flex;flex-direction:column;gap:11px;margin-bottom:28px;flex:1}
+.pf{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(240,240,248,.75);line-height:1.5}
+.pf-dot{width:18px;height:18px;border-radius:50%;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pf-dot i{font-size:8px;color:var(--red)}
+.plan-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;background:rgba(245,197,24,.08);border:1.5px solid rgba(245,197,24,.25);border-radius:12px;font-size:14px;font-weight:600;color:var(--red);transition:all .25s;cursor:pointer;margin-top:auto}
+.plan-btn:hover{background:var(--red);color:#000;border-color:var(--red)}
+.plan-card.featured .plan-btn{background:var(--red);color:#000;border-color:var(--red)}
+.plan-card.featured .plan-btn:hover{background:var(--red2)}
+
+/* cert full card inner layout */
+.cert-full-inner{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.cert-full-right{background:rgba(245,197,24,.05);border:1px solid rgba(245,197,24,.15);border-radius:14px;padding:20px}
+.cert-full-right-title{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.cert-includes{display:flex;flex-direction:column;gap:10px}
+.ci{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(240,240,248,.7)}
+.ci i{color:var(--red);margin-top:2px;font-size:11px;flex-shrink:0}
+
+/* ─── WHY CHOOSE ──────────────────────────────── */
+.why-section{padding:80px 5vw;background:var(--card)}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:20px;overflow:hidden;margin-top:48px}
+.why-card{background:var(--card);padding:36px 28px;transition:background .25s;position:relative;overflow:hidden}
+.why-card:hover{background:var(--card2)}
+.why-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:transparent;transition:background .3s}
+.why-card:hover::after{background:var(--red)}
+.why-icon{width:52px;height:52px;border-radius:14px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.18);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+.why-title{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px}
+.why-text{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ─── CURRICULUM ──────────────────────────────── */
+.curr-section{padding:80px 5vw}
+.curr-tabs{display:flex;gap:8px;margin:40px 0 32px;flex-wrap:wrap}
+.curr-tab{padding:10px 22px;border-radius:100px;border:1.5px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .25s;background:none}
+.curr-tab.active,.curr-tab:hover{border-color:var(--red);color:var(--red);background:rgba(245,197,24,.06)}
+.curr-content{display:none;animation:fadeUp .4s ease}
+.curr-content.active{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.curr-week{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.curr-week-label{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.curr-week-title{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:14px}
+.curr-topics{display:flex;flex-direction:column;gap:8px}
+.ct{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(240,240,248,.7)}
+.ct::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+
+/* ─── FAQ ─────────────────────────────────────── */
+.faq-section{padding:80px 5vw;background:var(--card)}
+.faq-list{display:flex;flex-direction:column;gap:8px;margin-top:48px;max-width:800px}
+.faq-item{background:var(--card2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .25s}
+.faq-item.open{border-color:rgba(245,197,24,.3)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;cursor:pointer;gap:16px;font-size:15px;font-weight:500}
+.faq-q-icon{width:28px;height:28px;border-radius:50%;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;font-size:12px;color:var(--red)}
+.faq-item.open .faq-q-icon{background:var(--red);border-color:var(--red);color:#000;transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s}
+.faq-a-inner{padding:0 24px 20px;font-size:14px;color:var(--muted);line-height:1.8}
+.faq-item.open .faq-a{max-height:300px}
+
+/* ─── CTA BOTTOM ──────────────────────────────── */
+.cta-section{padding:100px 5vw;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(245,197,24,.1) 0%,transparent 70%),var(--dark);position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(245,197,24,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(245,197,24,.04) 1px,transparent 1px);background-size:48px 48px}
+.cta-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.cta-title{font-family:var(--display);font-size:clamp(44px,7vw,88px);font-weight:700;text-transform:uppercase;line-height:.9;margin-bottom:20px}
+.cta-title em{color:var(--red);font-style:normal}
+.cta-text{font-size:16px;font-weight:300;color:var(--muted);line-height:1.75;margin-bottom:36px}
+.cta-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+
+/* ─── MODAL ───────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px;width:100%;max-width:520px;position:relative;transform:scale(.95) translateY(16px);transition:transform .35s;max-height:90vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:none}
+.modal-x{position:absolute;top:16px;right:16px;width:36px;height:36px;background:var(--card2);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all .2s;border:none}
+.modal-x:hover{background:rgba(245,197,24,.15);color:var(--red)}
+.modal-label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.modal-title{font-family:var(--display);font-size:36px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
+.form-input,.form-select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--text);font-family:var(--font);transition:border .25s;outline:none}
+.form-input:focus,.form-select:focus{border-color:rgba(245,197,24,.4)}
+.form-select option{background:var(--card2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-submit{width:100%;padding:15px;background:var(--red);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:all .25s;margin-top:8px;font-family:var(--font)}
+.form-submit:hover{background:var(--red2);transform:translateY(-1px)}
+.form-success{display:none;text-align:center;padding:20px 0}
+.form-success-icon{font-size:48px;margin-bottom:12px}
+.form-success h3{font-family:var(--display);font-size:32px;text-transform:uppercase;margin-bottom:8px}
+.form-success p{color:var(--muted);font-size:14px}
+
+/* ─── FOOTER ──────────────────────────────────── */
+footer{background:var(--card);border-top:1px solid var(--border);padding:56px 5vw 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.f-logo{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:1px;margin-bottom:12px}
+.f-logo span{color:var(--red)}
+.f-about{font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:20px}
+.f-social{display:flex;gap:8px}
+.fsb{width:36px;height:36px;border-radius:9px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);transition:all .2s;text-decoration:none}
+.fsb:hover{background:var(--red);border-color:var(--red);color:#000}
+.f-heading{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.f-links{display:flex;flex-direction:column;gap:9px}
+.f-link{font-size:14px;color:rgba(240,240,248,.5);transition:color .2s;display:flex;align-items:center;gap:7px}
+.f-link:hover{color:var(--red)}
+.f-bottom{border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:12px}
+.f-bottom-links{display:flex;gap:16px}
+.f-bottom-link{color:var(--muted);transition:color .2s;cursor:pointer}
+.f-bottom-link:hover{color:var(--text)}
+
+/* ─── REVEAL ──────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.reveal.vis{opacity:1;transform:none}
+
+/* ─── TOAST ───────────────────────────────────── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid rgba(0,214,143,.4);color:#00d68f;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(60px);opacity:0;transition:all .35s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:none;opacity:1}
+
+/* ─── MOBILE ──────────────────────────────────── */
+@media(max-width:900px){
+  .plans-grid{grid-template-columns:1fr 1fr}
+  .plan-card.cert-full{grid-column:span 2}
+  .why-grid{grid-template-columns:1fr 1fr}
+  .curr-content.active{grid-template-columns:1fr}
+  .cert-full-inner{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .nav-links,.nav-cta:not(.hamburger + .nav-cta){display:none}
+  .hamburger{display:flex}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  .plans-grid{grid-template-columns:1fr}
+  .plan-card.cert-full{grid-column:span 1}
+  .why-grid{grid-template-columns:1fr}
+  .path-step{flex:0 0 120px}
+  .path-scroll-hint{display:block}
+}
+@media(max-width:480px){
+  .footer-grid{grid-template-columns:1fr}
+  .tp-hero-btns{flex-direction:column}
+  .btn-red,.btn-outline{width:100%;justify-content:center}
+  .cta-btns{flex-direction:column;align-items:center}
+  .form-row{grid-template-columns:1fr}
+  .step-desc{flex-direction:column!important;gap:16px!important}
+  .step-desc .btn-red{width:100%;justify-content:center}
+}
+
+/* === TNS UNIVERSAL NAV === */
+.tns-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;padding:0 20px;display:flex;align-items:center;gap:16px;transition:background .3s,border .3s}
+.tns-nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.tns-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.tns-nav-logo img{width:38px;height:38px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-nav-brand{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:#f0f0f8;line-height:1}
+.tns-nav-brand span{color:#f5c518}
+.tns-nav-links{display:flex;gap:2px;margin-left:auto}
+.tns-nav-links a{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;color:#7a7a9a;text-decoration:none;transition:all .2s}
+.tns-nav-links a:hover{color:#f0f0f8;background:rgba(255,255,255,.07)}
+.tns-nav-links a.tns-active{color:#f5c518;background:rgba(245,197,24,.08)}
+.tns-nav-auth{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
+.tns-btn-join{padding:9px 20px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .2s;white-space:nowrap;display:inline-block}
+.tns-btn-join:hover{background:#ffd84d}
+.tns-btn-signin{padding:9px 16px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-size:13px;font-weight:600;color:#f0f0f8;text-decoration:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;display:inline-block}
+.tns-btn-signin:hover{border-color:rgba(255,255,255,.4)}
+.tns-user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:#111118;border:1px solid rgba(255,255,255,.08);border-radius:100px;text-decoration:none;transition:border-color .2s;cursor:pointer;flex-shrink:0}
+.tns-user-pill:hover{border-color:rgba(245,197,24,.4)}
+.tns-u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-family:'Teko',sans-serif;font-size:13px;font-weight:700;color:#000;flex-shrink:0;overflow:hidden;border:2px solid #f5c518}
+.tns-u-av img{width:100%;height:100%;object-fit:cover}
+.tns-uname{font-size:13px;font-weight:600;color:#f0f0f8}
+.tns-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;flex-shrink:0}
+.tns-ham span{width:22px;height:2px;background:#f0f0f8;border-radius:2px;transition:all .3s;display:block}
+.tns-ham.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.tns-ham.open span:nth-child(2){opacity:0}
+.tns-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.tns-mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.99);backdrop-filter:blur(24px);z-index:199;padding:20px 16px;flex-direction:column;gap:4px;overflow-y:auto}
+.tns-mob-nav.open{display:flex}
+.tns-mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:#7a7a9a;text-decoration:none;border:1px solid transparent;transition:all .2s}
+.tns-mob-nav a:hover{color:#f0f0f8;background:#111118;border-color:rgba(255,255,255,.07)}
+.tns-mob-nav a.tns-active{color:#f5c518;background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.15)}
+.tns-mob-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.tns-mob-join{display:block;padding:15px;background:#f5c518;border-radius:12px;font-size:15px;font-weight:700;color:#000;text-align:center;text-decoration:none;margin-top:8px}
+.tns-mob-prof{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);margin-top:8px;text-decoration:none;cursor:pointer}
+.tns-mob-prof-name{font-size:15px;font-weight:700;color:#f0f0f8}
+.tns-mob-prof-sub{font-size:12px;color:#7a7a9a}
+.tns-mob-signout{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#7a7a9a;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:6px;display:block;text-align:center}
+@media(max-width:768px){.tns-nav-links,.tns-nav-auth{display:none}.tns-ham{display:flex}}
+
+/* === TNS UNIVERSAL FOOTER === */
+.tns-footer{background:#0a0a12;border-top:1px solid rgba(255,255,255,.06);padding:56px 20px 0;margin-top:80px}
+.tns-fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px}
+.tns-fb{display:flex;flex-direction:column;gap:14px}
+.tns-fl{display:flex;align-items:center;gap:12px}
+.tns-fl img{width:44px;height:44px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-fn{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#f0f0f8}
+.tns-fn span{color:#f5c518}
+.tns-fe{font-size:11px;color:#7a7a9a;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.tns-fd{font-size:13px;color:#7a7a9a;line-height:1.7;max-width:260px}
+.tns-fs{display:flex;gap:8px;flex-wrap:wrap}
+.tns-fs a{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#7a7a9a;font-size:15px;transition:all .2s;text-decoration:none}
+.tns-fs a:hover{background:#f5c518;border-color:#f5c518;color:#000}
+.tns-fct{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7a7a9a;margin-bottom:16px}
+.tns-fc{display:flex;flex-direction:column;gap:10px}
+.tns-fc a{font-size:14px;color:rgba(240,240,248,.45);text-decoration:none;transition:color .2s}
+.tns-fc a:hover{color:#f5c518}
+.tns-fc span{font-size:13px;color:rgba(240,240,248,.35);display:flex;align-items:center;gap:6px}
+.tns-fc i{font-size:12px;color:#f5c518}
+.tns-fbot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7a7a9a;max-width:1100px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.tns-fbot a{color:#7a7a9a;text-decoration:none;transition:color .2s}
+.tns-fbot a:hover{color:#f5c518}
+@media(max-width:768px){.tns-fi{grid-template-columns:1fr 1fr;gap:28px}.tns-fb{grid-column:span 2}.tns-footer{margin-top:40px}}
+@media(max-width:480px){.tns-fi{grid-template-columns:1fr}.tns-fb{grid-column:span 1}.tns-fbot{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="tns-nav" id="tns-nav">
+  <a href="index.html" class="tns-nav-logo">
+    <img src="TNS-Logo-6.png" alt="TNS">
+    <div class="tns-nav-brand">TNS<span> AW</span></div>
+  </a>
+  <div class="tns-nav-links">
+    <a href="index.html">Home</a>
+    <a href="training.html" class="tns-active">Training</a>
+    <a href="events.html">Events</a>
+    <a href="community.html">Community</a>
+    <a href="tnarmy.html">TNS Army</a>
+  </div>
+  <div class="tns-nav-auth" id="tns-nav-auth">
+    <a href="auth.html" class="tns-btn-signin">Sign In</a>
+    <a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a>
+  </div>
+  <button class="tns-ham" id="tns-ham" onclick="tnsToggleMob()" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="tns-mob-nav" id="tns-mob-nav">
+  <a href="index.html" onclick="tnsCloseMob()">Home</a>
+  <a href="training.html" class="tns-active" onclick="tnsCloseMob()">Training</a>
+  <a href="events.html" onclick="tnsCloseMob()">Events</a>
+  <a href="community.html" onclick="tnsCloseMob()">Community</a>
+  <a href="tnarmy.html" onclick="tnsCloseMob()">TNS Army</a>
+  <div class="tns-mob-sep"></div>
+  <div id="tns-mob-auth"><a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a></div>
+</div>
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker">
+    <!-- JS fills this -->
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="tp-hero">
+  <div class="tp-hero-bg">
+    <img src="TNS-Arm-wrestling-7-scaled.jpg" alt="TNS Training" id="hero-img">
+  </div>
+  <div class="tp-hero-content">
+    <div class="tp-pill">
+      <div class="tp-pill-dot"></div>
+      <span>India's #1 Arm Wrestling Academy</span>
+    </div>
+    <h1>MASTER<br>THE <em>ART</em><br>OF THE ARM</h1>
+    <p>From raw beginner to certified trainer — TNS gives you the techniques, strength, and strategy to dominate on the table. Train online, anywhere in the world.</p>
+    <div class="tp-hero-btns">
+      <a href="#plans" class="btn-red"><i class="fa-solid fa-hand-fist"></i> View Programs</a>
+      <a href="FORM.pdf" target="_blank" class="btn-outline"><i class="fa-solid fa-file-arrow-down"></i> Download Brochure</a>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS PATH -->
+<section class="path-section">
+  <div class="container">
+    <div class="s-label reveal">Your Journey</div>
+    <h2 class="s-title reveal">THE PATH TO<br><span style="color:var(--red)">CHAMPION</span></h2>
+    <p class="s-sub reveal">Every legend starts somewhere. Here's how TNS takes you from zero to certified.</p>
+    <div class="path-track-wrap">
+    <div class="path-track reveal">
+      <div class="path-step active" onclick="setStep(0)">
+        <div class="path-node">1</div>
+        <div class="path-label">Beginner</div>
+      </div>
+      <div class="path-step" onclick="setStep(1)">
+        <div class="path-node">2</div>
+        <div class="path-label">Intermediate</div>
+      </div>
+      <div class="path-step" onclick="setStep(2)">
+        <div class="path-node">3</div>
+        <div class="path-label">Advanced</div>
+      </div>
+      <div class="path-step" onclick="setStep(3)">
+        <div class="path-node">4</div>
+        <div class="path-label">Trainer</div>
+      </div>
+      <div class="path-step" onclick="setStep(4)">
+        <div class="path-node">5</div>
+        <div class="path-label">Referee</div>
+      </div>
+    </div>
+    </div>
+    <div class="path-scroll-hint"><i class="fa-solid fa-arrow-right"></i> &nbsp;Swipe to explore your path &nbsp;<i class="fa-solid fa-arrow-right"></i></div>
+    <!-- Step descriptions -->
+    <div id="step-descs">
+      <div class="step-desc reveal" id="step-0" style="display:flex;gap:32px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px">
+        <div style="font-size:48px;flex-shrink:0">🤜</div>
+        <div>
+          <div style="font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Beginner Program</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7">Learn fundamentals of stance, grip & posture. Build base strength and get introduced to the three core moves — hook, top roll, and press. Zero experience needed.</div>
+        </div>
+        <a href="#plans" class="btn-red" style="flex-shrink:0;white-space:nowrap"><i class="fa-solid fa-arrow-right"></i> ₹1,500</a>
+      </div>
+      <div class="step-desc" id="step-1" style="display:none;gap:32px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px">
+        <div style="font-size:48px;flex-shrink:0">💪</div>
+        <div>
+          <div style="font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Intermediate Program</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7">Advanced grips, leverage mechanics, arm & wrist strengthening. Speed and endurance training + real competition strategy to start winning.</div>
+        </div>
+        <a href="#plans" class="btn-red" style="flex-shrink:0;white-space:nowrap"><i class="fa-solid fa-arrow-right"></i> ₹2,000</a>
+      </div>
+      <div class="step-desc" id="step-2" style="display:none;gap:32px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px">
+        <div style="font-size:48px;flex-shrink:0">⚔️</div>
+        <div>
+          <div style="font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Advanced Program</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7">Pro-level techniques, opponent analysis, explosive power training and full competition preparation. Built for serious athletes ready to compete.</div>
+        </div>
+        <a href="#plans" class="btn-red" style="flex-shrink:0;white-space:nowrap"><i class="fa-solid fa-arrow-right"></i> ₹2,500</a>
+      </div>
+      <div class="step-desc" id="step-3" style="display:none;gap:32px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px">
+        <div style="font-size:48px;flex-shrink:0">🏅</div>
+        <div>
+          <div style="font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Certified Trainer</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7">Official TNS Trainer Certification. Online + live sessions, coaching methodology, final exam and business development guidance to launch your coaching career.</div>
+        </div>
+        <a href="#plans" class="btn-red" style="flex-shrink:0;white-space:nowrap"><i class="fa-solid fa-arrow-right"></i> ₹4,999</a>
+      </div>
+      <div class="step-desc" id="step-4" style="display:none;gap:32px;align-items:center;background:var(--card2);border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:28px 32px;margin-top:24px">
+        <div style="font-size:48px;flex-shrink:0">🏆</div>
+        <div>
+          <div style="font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Trainer + Referee</div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7">The ultimate TNS certification — train others AND officiate tournaments. Includes full rules training and the opportunity to referee official TNS events.</div>
+        </div>
+        <a href="#plans" class="btn-red" style="flex-shrink:0;white-space:nowrap"><i class="fa-solid fa-arrow-right"></i> ₹9,999</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANS -->
+<section class="plans-section" id="plans">
+  <div class="container">
+    <div class="s-label reveal">Pricing</div>
+    <h2 class="s-title reveal">CHOOSE YOUR<br><span style="color:var(--red)">PROGRAM</span></h2>
+    <p class="s-sub reveal">All programs are 100% online. Train from anywhere, at your own pace.</p>
+
+    <div class="plans-grid">
+
+      <!-- BEGINNER -->
+      <div class="plan-card reveal">
+        <div class="plan-icon">🤜</div>
+        <div class="plan-level">Level 01</div>
+        <div class="plan-name">Beginner</div>
+        <div class="plan-best">Best for new learners & fitness enthusiasts</div>
+        <div class="plan-price">₹1,500<span>/month</span></div>
+        <div class="plan-price-alt"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Fundamentals of stance, grip & posture</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Basic strength-building exercises</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Intro to hook, top roll & press moves</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Injury prevention techniques</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Beginner Program - ₹1,500/month">Enroll Now <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+
+      <!-- INTERMEDIATE -->
+      <div class="plan-card reveal">
+        <div class="plan-icon">💪</div>
+        <div class="plan-level">Level 02</div>
+        <div class="plan-name">Intermediate</div>
+        <div class="plan-best">Best for fitness athletes & wrestlers</div>
+        <div class="plan-price">₹2,000<span>/month</span></div>
+        <div class="plan-price-alt"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Advanced grips & leverage mechanics</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Arm & wrist strengthening drills</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Speed & endurance training</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Competition strategy fundamentals</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Intermediate Program - ₹2,000/month')">Enroll Now <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+
+      <!-- ADVANCED -->
+      <div class="plan-card featured reveal">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-icon">⚔️</div>
+        <div class="plan-level">Level 03</div>
+        <div class="plan-name">Advanced</div>
+        <div class="plan-best">Best for competitive athletes</div>
+        <div class="plan-price">₹2,500<span>/month</span></div>
+        <div class="plan-price-alt"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Pro-level techniques & counters</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Opponent analysis & match strategy</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Explosive power training</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Full competition preparation</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Advanced Program - ₹2,500/month')">Enroll Now <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+
+      <!-- CERTIFIED TRAINER -->
+      <div class="plan-card cert reveal">
+        <div class="plan-icon">🏅</div>
+        <div class="plan-level">Certification</div>
+        <div class="plan-name">Trainer<br>Cert</div>
+        <div class="plan-best">Best for those who want to coach</div>
+        <div class="plan-price">₹4,999<span>/1 month</span></div>
+        <div class="plan-price-alt">Official TNS Trainer Certificate</div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Official TNS Trainer Certification</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Online + live interactive sessions</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Coaching methodology & final exam</div>
+          <div class="pf"><div class="pf-dot"><i class="fa-solid fa-check"></i></div>Business development guidance</div>
+        </div>
+        <button class="plan-btn" onclick="openModal('Certified Trainer Program - ₹4,999 (1 month)')">Enroll Now <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+
+      <!-- TRAINER + REFEREE (spans 2 cols) -->
+      <div class="plan-card cert-full reveal" style="background:linear-gradient(135deg,#0f0f00 0%,#1a1500 100%);border-color:rgba(245,197,24,.35)">
+        <div class="plan-badge" style="background:linear-gradient(90deg,var(--red),var(--red2))">🏆 Ultimate</div>
+        <div class="cert-full-inner">
+          <div>
+            <div class="plan-icon">🎖️</div>
+            <div class="plan-level">Elite Certification</div>
+            <div class="plan-name">Trainer +<br>Referee</div>
+            <div class="plan-best">Build a career in arm wrestling — coach & officiate</div>
+            <div class="plan-price">₹9,999<span>/1 month</span></div>
+            <div class="plan-price-alt">The most complete TNS certification</div>
+            <button class="plan-btn" onclick="openModal('Certified Trainer + Referee Program - ₹9,999 (1 month)')">Enroll Now <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+          <div class="cert-full-right">
+            <div class="cert-full-right-title">Certification Includes</div>
+            <div class="cert-includes">
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>TNS Armwrestling Trainer Certification</div>
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>Official Referee Certification (TNS-recognized)</div>
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>Rules & regulations of professional arm wrestling</div>
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>Opportunities to referee official TNS events & tournaments</div>
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>Career guidance in the arm wrestling industry</div>
+              <div class="ci"><i class="fa-solid fa-check-circle"></i>Online + live interactive certification sessions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE -->
+<section class="why-section">
+  <div class="container">
+    <div class="s-label reveal">Why TNS</div>
+    <h2 class="s-title reveal">BUILT FOR<br><span style="color:var(--red)">WINNERS</span></h2>
+    <div class="why-grid reveal">
+      <div class="why-card">
+        <div class="why-icon">🇮🇳</div>
+        <div class="why-title">India's Leading Academy</div>
+        <div class="why-text">Learn from the best arm wrestling trainers in India — proven techniques used by champions, refined since 2017.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🌍</div>
+        <div class="why-title">Global Online Access</div>
+        <div class="why-text">Train from anywhere in the world. All you need is an internet connection. Available on all devices, 24/7.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🏅</div>
+        <div class="why-title">Official Certifications</div>
+        <div class="why-text">Earn recognized TNS certifications that help you build a real career as a trainer or referee in competitive arm wrestling.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🤝</div>
+        <div class="why-title">Community & Support</div>
+        <div class="why-text">Join Pune's most passionate arm wrestling community. Get ongoing support from coaches and fellow athletes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CURRICULUM PREVIEW -->
+<section class="curr-section">
+  <div class="container">
+    <div class="s-label reveal">What You'll Learn</div>
+    <h2 class="s-title reveal">CURRICULUM<br><span style="color:var(--red)">OVERVIEW</span></h2>
+    <p class="s-sub reveal">A structured week-by-week breakdown to ensure consistent progress.</p>
+    <div class="curr-tabs reveal">
+      <button class="curr-tab active" onclick="switchTab('beginner')">Beginner</button>
+      <button class="curr-tab" onclick="switchTab('intermediate')">Intermediate</button>
+      <button class="curr-tab" onclick="switchTab('advanced')">Advanced</button>
+    </div>
+
+    <div class="curr-content active" id="tab-beginner">
+      <div class="curr-week"><div class="curr-week-label">Week 1–2</div><div class="curr-week-title">Foundation</div><div class="curr-topics"><div class="ct">Proper table setup & safety rules</div><div class="ct">Wrist neutral position & grip types</div><div class="ct">Basic stance & shoulder positioning</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 3–4</div><div class="curr-week-title">Core Moves</div><div class="curr-topics"><div class="ct">Introduction to the Hook</div><div class="ct">Introduction to Top Roll</div><div class="ct">Press technique basics</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 5–6</div><div class="curr-week-title">Strength Building</div><div class="curr-topics"><div class="ct">Forearm & wrist conditioning</div><div class="ct">Finger strength & pinch training</div><div class="ct">Pulling power exercises</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 7–8</div><div class="curr-week-title">Injury Prevention & Review</div><div class="curr-topics"><div class="ct">Common arm wrestling injuries</div><div class="ct">Warm-up & cool-down routines</div><div class="ct">First sparring session & feedback</div></div></div>
+    </div>
+
+    <div class="curr-content" id="tab-intermediate">
+      <div class="curr-week"><div class="curr-week-label">Week 1–2</div><div class="curr-week-title">Advanced Grips</div><div class="curr-topics"><div class="ct">Inside & outside control grips</div><div class="ct">Pronation & supination leverage</div><div class="ct">Grip transitioning drills</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 3–4</div><div class="curr-week-title">Speed & Endurance</div><div class="curr-topics"><div class="ct">Explosive start training</div><div class="ct">Fatigue management mid-match</div><div class="ct">High-rep conditioning circuits</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 5–6</div><div class="curr-week-title">Competition Strategy</div><div class="curr-topics"><div class="ct">Reading opponent's setup</div><div class="ct">Choosing your attack vs counter</div><div class="ct">Weight class preparation</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 7–8</div><div class="curr-week-title">Sparring & Review</div><div class="curr-topics"><div class="ct">Controlled sparring rounds</div><div class="ct">Video analysis & corrections</div><div class="ct">Mock competition prep</div></div></div>
+    </div>
+
+    <div class="curr-content" id="tab-advanced">
+      <div class="curr-week"><div class="curr-week-label">Week 1–2</div><div class="curr-week-title">Pro Techniques</div><div class="curr-topics"><div class="ct">King's move & press counters</div><div class="ct">Elbow flare & body positioning</div><div class="ct">Wrist deviation offence</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 3–4</div><div class="curr-week-title">Opponent Analysis</div><div class="curr-topics"><div class="ct">Identifying opponent weaknesses</div><div class="ct">Adjusting strategy mid-match</div><div class="ct">Multi-round game planning</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 5–6</div><div class="curr-week-title">Explosive Power</div><div class="curr-topics"><div class="ct">Plyometric arm training</div><div class="ct">1RM testing & periodisation</div><div class="ct">Peak performance timing</div></div></div>
+      <div class="curr-week"><div class="curr-week-label">Week 7–8</div><div class="curr-week-title">Tournament Simulation</div><div class="curr-topics"><div class="ct">Full bracket simulation</div><div class="ct">Mental preparation techniques</div><div class="ct">Pre-competition nutrition & recovery</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <div class="s-label reveal">Got Questions?</div>
+    <h2 class="s-title reveal">FREQUENTLY<br><span style="color:var(--red)">ASKED</span></h2>
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Is this program online or offline?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Our program is 100% online, making it accessible to anyone, anywhere in the world. All you need is an internet connection to access training materials and live sessions.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Do I need any special equipment to start?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">You'll need basic equipment like dumbbells, resistance bands, and a training table. For beginners, we provide alternative exercises that can be done with minimal or no equipment. As you progress, we'll guide you on additional gear.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Will I receive a certificate after completing the program?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Yes! Upon successful completion of the Trainer or Referee programs, you'll receive an official TNS Armwrestling certification. For all other programs, you'll receive a certificate of completion to add to your portfolio.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What languages are the training materials available in?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Our training materials and live sessions are available in both English and Hindi. We're working on adding more language options in the future to make our programs accessible to a wider audience.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          How much time should I dedicate each week?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">We recommend at least 3–5 hours per week to see significant progress. Our programs are designed to be flexible, letting you learn at your own schedule — but consistency is key.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I upgrade my plan later?
+          <div class="faq-q-icon"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely. Many athletes start at the Beginner level and work their way up. You can upgrade at any time — just reach out to us on WhatsApp and we'll handle the transition smoothly.</div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-title">READY TO<br><em>DOMINATE?</em></div>
+    <p class="cta-text">Join India's most elite arm wrestling academy. Pick your program, start your journey, and build a legacy on the table.</p>
+    <div class="cta-btns">
+      <button class="btn-red" onclick="openModal()"><i class="fa-solid fa-hand-fist"></i> Enroll Now</button>
+      <a href="https://wa.me/917387878771" target="_blank" class="btn-outline"><i class="fa-brands fa-whatsapp"></i> WhatsApp Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="tns-footer">
+  <div class="tns-fi">
+    <div class="tns-fb">
+      <div class="tns-fl"><img src="TNS-Logo-6.png" alt="TNS"><div><div class="tns-fn">TNS<span> AW</span></div><div class="tns-fe">Est. 2017 · Pune</div></div></div>
+      <p class="tns-fd">Pune's first and premier arm wrestling club. Train. Compete. Dominate.</p>
+      <div class="tns-fs">
+        <a href="https://instagram.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://youtube.com/@tnsarmwrestling" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://facebook.com/tnsarmwrestling" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://linkedin.com/company/tns-arm-wrestling" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="https://wa.me/917387878771" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+    <div><div class="tns-fct">Pages</div><div class="tns-fc"><a href="index.html">Home</a><a href="training.html">Training</a><a href="events.html">Events</a><a href="community.html">Community</a><a href="tnarmy.html">TNS Army</a></div></div>
+    <div><div class="tns-fct">Account</div><div class="tns-fc"><a href="auth.html">Sign In</a><a href="auth.html?mode=register">Join TNS</a><a href="profile.html">My Profile</a><a href="profile.html?tab=history">My Payments</a></div></div>
+    <div><div class="tns-fct">Contact</div><div class="tns-fc"><span><i class="fa-solid fa-location-dot"></i> NIBM Road, Pune</span><span><i class="fa-brands fa-whatsapp"></i><a href="https://wa.me/917387878771">+91 73878 78771</a></span><span><i class="fa-solid fa-envelope"></i><a href="mailto:contact@tnsarmwrestling.com">contact@...</a></span></div></div>
+  </div>
+  <div class="tns-fbot"><span>© 2024 TNS Arm Wrestling. All rights reserved.</span><div style="display:flex;gap:16px"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div></div>
+</footer>
+
+<!-- ENROLL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <button class="modal-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-form-wrap">
+      <div class="modal-label">Join TNS Academy</div>
+      <div class="modal-title">Enroll Now</div>
+      <div class="modal-sub">Fill in your details and we'll reach out within 24 hours.</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="f-name" placeholder="Your full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="f-email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone / WhatsApp</label>
+          <input class="form-input" type="tel" id="f-phone" placeholder="+91 XXXXX XXXXX">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Program</label>
+        <select class="form-select" id="f-program">
+          <option value="">-- Select a program --</option>
+          <option>Beginner Program - ₹1,500/month</option>
+          <option>Intermediate Program - ₹2,000/month</option>
+          <option>Advanced Program - ₹2,500/month</option>
+          <option>Certified Trainer Program - ₹4,999 (1 month)</option>
+          <option>Certified Trainer + Referee Program - ₹9,999 (1 month)</option>
+        </select>
+      </div>
+      <button class="form-submit" onclick="submitForm()"><i class="fa-solid fa-hand-fist"></i> Submit Application</button>
+    </div>
+    <div id="upi-payment-wrap" style="display:none;padding:8px 0">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7a7a9a);margin-bottom:6px">PAYMENT</div>
+        <div style="font-family:Teko,sans-serif;font-size:38px;font-weight:700;color:#f5c518" id="upi-amount">₹0</div>
+        <div style="font-size:13px;color:var(--muted,#7a7a9a)" id="upi-item"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7a7a9a);margin-bottom:8px">Pay via UPI</div>
+        <div style="font-size:16px;font-weight:700;color:#f0f0f8;margin-bottom:12px" id="upi-id-display">tnsarmwrestling@upi</div>
+        <a id="upi-link" href="#" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#f5c518;border-radius:10px;font-size:14px;font-weight:700;color:#000;text-decoration:none;margin-bottom:8px">
+          <i class="fa-solid fa-mobile-screen"></i> Open UPI App
+        </a>
+        <div style="font-size:12px;color:var(--muted,#7a7a9a)">Or pay via GPay, PhonePe, Paytm using UPI ID above</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7a7a9a);margin-bottom:6px">Enter UPI Transaction ID</label>
+        <input id="upi-ref-input" type="text" placeholder="e.g. 4038271827364" style="width:100%;height:46px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:0 14px;font-size:14px;color:#f0f0f8;outline:none;font-family:Outfit,sans-serif">
+      </div>
+      <button onclick="confirmTrainingPayment()" style="width:100%;height:50px;background:#f5c518;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:Outfit,sans-serif">
+        <i class="fa-solid fa-check"></i> Confirm Payment & Enroll
+      </button>
+    </div>
+    <div class="form-success" id="form-success">
+      <div class="form-success-icon">🏆</div>
+      <h3>Application Sent!</h3>
+      <p>We'll reach out to you within 24 hours via WhatsApp or email. Get ready to train!</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── TICKER ────────────────────────────────────
+const tickItems = [
+  '⚡ Event: Multifit · Magarpatta · April 11, 2026 · 12:00 PM',
+  '🏆 All weight categories welcome — register now',
+  '💪 Pune\'s First Arm Wrestling Club — Est. 2017',
+  '🤝 Official Decathlon & MultiFit Partner',
+  '📍 TNS GYM, NIBM Road, Pune',
+  '🔥 Train · Compete · Dominate',
+];
+const doubled = [...tickItems,...tickItems];
+document.getElementById('ticker').innerHTML = doubled.map(t=>`<div class="ticker-item">${t}<span class="ticker-sep">✦</span></div>`).join('');
+
+// ── NAV SCROLL ────────────────────────────────
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('stuck',scrollY>40),{passive:true});
+
+// ── HAMBURGER ─────────────────────────────────
+function toggleMenu(){
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('mobile-nav').classList.toggle('open');
+  document.body.style.overflow=document.getElementById('mobile-nav').classList.contains('open')?'hidden':'';
+}
+function closeMenu(){
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('mobile-nav').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── HERO BG CYCLE ─────────────────────────────
+const BASE='https://tnsarmwrestling.com/wp-content/uploads/2023/07';
+const heroImgs=[`${BASE}/TNS-Arm-wrestling-7-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-12-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-9-scaled.jpg`,`${BASE}/TNS-Arm-wrestling-14-scaled.jpg`];
+let hi=0;
+setInterval(()=>{
+  const el=document.getElementById('hero-img');
+  el.style.transition='opacity .8s';el.style.opacity='0';
+  hi=(hi+1)%heroImgs.length;
+  setTimeout(()=>{el.src=heroImgs[hi];el.style.opacity='1';},800);
+},5500);
+
+// ── PROGRESS PATH ─────────────────────────────
+function setStep(n){
+  document.querySelectorAll('.path-step').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.step-desc').forEach((d,i)=>d.style.display=i===n?'flex':'none');
+}
+
+// ── CURRICULUM TABS ───────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.curr-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.curr-content').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── FAQ ───────────────────────────────────────
+function toggleFaq(el){
+  const item=el.parentElement;
+  const wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+
+// ── MODAL ─────────────────────────────────────
+function openModal(program=''){
+  document.getElementById('form-success').style.display='none';
+  document.getElementById('modal-form-wrap').style.display='block';
+  if(program) document.getElementById('f-program').value=program;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+}
+document.addEventListener('keydown',e=>e.key==='Escape'&&closeModal());
+
+function submitForm(){
+  const user = typeof TNS_DB !== 'undefined' ? TNS_DB.getCurrentUser() : null;
+  const name=(user ? user.name : document.getElementById('f-name').value.trim()) || document.getElementById('f-name').value.trim();
+  const email=(user ? user.email : document.getElementById('f-email').value.trim()) || document.getElementById('f-email').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const prog=document.getElementById('f-program').value;
+  if(!name||!phone||!prog){showToast('⚠️ Please fill all required fields.');return;}
+
+  // Parse price from program string
+  const match = prog.match(/₹([\d,]+)/);
+  const amount = match ? parseInt(match[1].replace(/,/g,'')) : 0;
+
+  if(user && amount > 0){
+    // Create pending transaction
+    const itemId = 'training_' + prog.replace(/\s+/g,'_').replace(/[^a-z0-9_]/gi,'');
+    const res = TNS_DB.createTransaction({ type:'training', itemName: prog, itemId, amount });
+    if(res.ok){
+      showUPIPayment(res.txn, prog, amount);
+      return;
+    }
+  }
+  // Non-logged-in fallback: show success + prompt to create account
+  document.getElementById('modal-form-wrap').style.display='none';
+  document.getElementById('form-success').style.display='block';
+  showToast('✅ Application submitted!');
+}
+
+let currentTxn = null;
+function showUPIPayment(txn, prog, amount){
+  currentTxn = txn;
+  const settings = TNS_DB.getSettings();
+  const upiId = settings.upiId || 'tnsarmwrestling@upi';
+  const upiName = settings.upiName || 'TNS Arm Wrestling';
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('TNS Training: ' + prog)}`;
+  document.getElementById('modal-form-wrap').style.display='none';
+  document.getElementById('form-success').style.display='none';
+  document.getElementById('upi-payment-wrap').style.display='block';
+  document.getElementById('upi-amount').textContent = '₹' + amount.toLocaleString();
+  document.getElementById('upi-item').textContent = prog;
+  document.getElementById('upi-id-display').textContent = upiId;
+  document.getElementById('upi-link').href = upiLink;
+}
+
+function confirmTrainingPayment(){
+  const ref = document.getElementById('upi-ref-input').value.trim();
+  if(!ref){showToast('⚠️ Enter your UPI transaction ID');return;}
+  if(currentTxn){
+    TNS_DB.confirmPayment(currentTxn.id, ref);
+    document.getElementById('upi-payment-wrap').style.display='none';
+    document.getElementById('form-success').style.display='block';
+    showToast('✅ Payment confirmed! Enrollment complete.');
+  }
+}
+
+// ── TOAST ─────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── SCROLL REVEAL ─────────────────────────────
+const ro=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('vis')),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions — TNS Arm Wrestling</title>
+<link rel="icon" href="https://tnsarmwrestling.com/wp-content/uploads/2023/05/TNS-Logo-6.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#e8102a;--dark:#08080f;--card:#111118;--border:rgba(255,255,255,.07);--text:#f0f0f8;--muted:#7a7a9a;--font:'Outfit',sans-serif;--display:'Teko',sans-serif}
+body{padding-top:64px;background:var(--dark);color:var(--text);font-family:var(--font);min-height:100vh;padding:60px 5vw}
+.wrap{max-width:760px;margin:0 auto}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:40px;transition:color .2s}
+.back:hover{color:var(--red)}
+h1{font-family:var(--display);font-size:52px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
+h1 span{color:var(--red)}
+.date{font-size:13px;color:var(--muted);margin-bottom:40px}
+h2{font-family:var(--display);font-size:26px;font-weight:700;text-transform:uppercase;margin:36px 0 12px;color:var(--text)}
+p,li{font-size:15px;font-weight:300;color:rgba(240,240,248,.7);line-height:1.8;margin-bottom:12px}
+ul{padding-left:20px}
+a{color:var(--red)}
+
+/* === TNS UNIVERSAL NAV === */
+.tns-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;padding:0 20px;display:flex;align-items:center;gap:16px;transition:background .3s,border .3s}
+.tns-nav.stuck{background:rgba(8,8,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.tns-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.tns-nav-logo img{width:38px;height:38px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-nav-brand{font-family:'Teko',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:#f0f0f8;line-height:1}
+.tns-nav-brand span{color:#f5c518}
+.tns-nav-links{display:flex;gap:2px;margin-left:auto}
+.tns-nav-links a{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;color:#7a7a9a;text-decoration:none;transition:all .2s}
+.tns-nav-links a:hover{color:#f0f0f8;background:rgba(255,255,255,.07)}
+.tns-nav-links a.tns-active{color:#f5c518;background:rgba(245,197,24,.08)}
+.tns-nav-auth{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
+.tns-btn-join{padding:9px 20px;background:#f5c518;border-radius:10px;font-size:13px;font-weight:700;color:#000;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .2s;white-space:nowrap;display:inline-block}
+.tns-btn-join:hover{background:#ffd84d}
+.tns-btn-signin{padding:9px 16px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-size:13px;font-weight:600;color:#f0f0f8;text-decoration:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;display:inline-block}
+.tns-btn-signin:hover{border-color:rgba(255,255,255,.4)}
+.tns-user-pill{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:#111118;border:1px solid rgba(255,255,255,.08);border-radius:100px;text-decoration:none;transition:border-color .2s;cursor:pointer;flex-shrink:0}
+.tns-user-pill:hover{border-color:rgba(245,197,24,.4)}
+.tns-u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#f97316);display:flex;align-items:center;justify-content:center;font-family:'Teko',sans-serif;font-size:13px;font-weight:700;color:#000;flex-shrink:0;overflow:hidden;border:2px solid #f5c518}
+.tns-u-av img{width:100%;height:100%;object-fit:cover}
+.tns-uname{font-size:13px;font-weight:600;color:#f0f0f8}
+.tns-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;flex-shrink:0}
+.tns-ham span{width:22px;height:2px;background:#f0f0f8;border-radius:2px;transition:all .3s;display:block}
+.tns-ham.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.tns-ham.open span:nth-child(2){opacity:0}
+.tns-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.tns-mob-nav{display:none;position:fixed;inset:64px 0 0 0;background:rgba(8,8,15,.99);backdrop-filter:blur(24px);z-index:199;padding:20px 16px;flex-direction:column;gap:4px;overflow-y:auto}
+.tns-mob-nav.open{display:flex}
+.tns-mob-nav a{padding:14px 16px;border-radius:12px;font-size:16px;font-weight:500;color:#7a7a9a;text-decoration:none;border:1px solid transparent;transition:all .2s}
+.tns-mob-nav a:hover{color:#f0f0f8;background:#111118;border-color:rgba(255,255,255,.07)}
+.tns-mob-nav a.tns-active{color:#f5c518;background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.15)}
+.tns-mob-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.tns-mob-join{display:block;padding:15px;background:#f5c518;border-radius:12px;font-size:15px;font-weight:700;color:#000;text-align:center;text-decoration:none;margin-top:8px}
+.tns-mob-prof{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);margin-top:8px;text-decoration:none;cursor:pointer}
+.tns-mob-prof-name{font-size:15px;font-weight:700;color:#f0f0f8}
+.tns-mob-prof-sub{font-size:12px;color:#7a7a9a}
+.tns-mob-signout{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#7a7a9a;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:6px;display:block;text-align:center}
+@media(max-width:768px){.tns-nav-links,.tns-nav-auth{display:none}.tns-ham{display:flex}}
+
+/* === TNS UNIVERSAL FOOTER === */
+.tns-footer{background:#0a0a12;border-top:1px solid rgba(255,255,255,.06);padding:56px 20px 0;margin-top:80px}
+.tns-fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px}
+.tns-fb{display:flex;flex-direction:column;gap:14px}
+.tns-fl{display:flex;align-items:center;gap:12px}
+.tns-fl img{width:44px;height:44px;border-radius:50%;border:2px solid #f5c518;object-fit:cover}
+.tns-fn{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#f0f0f8}
+.tns-fn span{color:#f5c518}
+.tns-fe{font-size:11px;color:#7a7a9a;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.tns-fd{font-size:13px;color:#7a7a9a;line-height:1.7;max-width:260px}
+.tns-fs{display:flex;gap:8px;flex-wrap:wrap}
+.tns-fs a{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#7a7a9a;font-size:15px;transition:all .2s;text-decoration:none}
+.tns-fs a:hover{background:#f5c518;border-color:#f5c518;color:#000}
+.tns-fct{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7a7a9a;margin-bottom:16px}
+.tns-fc{display:flex;flex-direction:column;gap:10px}
+.tns-fc a{font-size:14px;color:rgba(240,240,248,.45);text-decoration:none;transition:color .2s}
+.tns-fc a:hover{color:#f5c518}
+.tns-fc span{font-size:13px;color:rgba(240,240,248,.35);display:flex;align-items:center;gap:6px}
+.tns-fc i{font-size:12px;color:#f5c518}
+.tns-fbot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7a7a9a;max-width:1100px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.tns-fbot a{color:#7a7a9a;text-decoration:none;transition:color .2s}
+.tns-fbot a:hover{color:#f5c518}
+@media(max-width:768px){.tns-fi{grid-template-columns:1fr 1fr;gap:28px}.tns-fb{grid-column:span 2}.tns-footer{margin-top:40px}}
+@media(max-width:480px){.tns-fi{grid-template-columns:1fr}.tns-fb{grid-column:span 1}.tns-fbot{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<nav class="tns-nav" id="tns-nav">
+  <a href="index.html" class="tns-nav-logo"><img src="TNS-Logo-6.png" alt="TNS"><div class="tns-nav-brand">TNS<span> AW</span></div></a>
+  <div class="tns-nav-links">
+    <a href="index.html">Home</a>
+    <a href="training.html">Training</a>
+    <a href="events.html">Events</a>
+    <a href="community.html">Community</a>
+    <a href="tnarmy.html">TNS Army</a>
+  </div>
+  <div class="tns-nav-auth" id="tns-nav-auth"><a href="auth.html" class="tns-btn-signin">Sign In</a><a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a></div>
+  <button class="tns-ham" id="tns-ham" onclick="tnsToggleMob()" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="tns-mob-nav" id="tns-mob-nav">
+  <a href="index.html" onclick="tnsCloseMob()">Home</a>
+  <a href="training.html" onclick="tnsCloseMob()">Training</a>
+  <a href="events.html" onclick="tnsCloseMob()">Events</a>
+  <a href="community.html" onclick="tnsCloseMob()">Community</a>
+  <a href="tnarmy.html" onclick="tnsCloseMob()">TNS Army</a>
+  <div class="tns-mob-sep"></div>
+  <div id="tns-mob-auth"><a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a></div>
+</div>
+
+<div class="wrap">
+  <a href="index.html" class="back">← Back to TNS Arm Wrestling</a>
+  <h1>Terms &amp; <span>Conditions</span></h1>
+  <p class="date">Last updated: January 2026</p>
+
+  <p>By using the TNS Arm Wrestling platform ("TNS", "the Site"), you agree to these Terms. Please read them carefully.</p>
+
+  <h2>1. Eligibility</h2>
+  <ul>
+    <li>You must be at least 13 years old to create an account.</li>
+    <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
+  </ul>
+
+  <h2>2. Community Rules</h2>
+  <ul>
+    <li>Post only content relevant to arm wrestling, fitness, and sport.</li>
+    <li>No harassment, hate speech, spam, or illegal content.</li>
+    <li>No impersonation of other athletes, coaches, or TNS staff.</li>
+    <li>TNS moderators may remove content or ban accounts that violate these rules.</li>
+  </ul>
+
+  <h2>3. Intellectual Property</h2>
+  <p>Content you post remains yours. By posting on TNS, you grant TNS a non-exclusive licence to display your content on the platform. TNS branding, logo, and site design are owned by TNS Arm Wrestling.</p>
+
+  <h2>4. Participation in Events</h2>
+  <ul>
+    <li>Event registration via the platform is subject to separate event-specific terms.</li>
+    <li>Participants must follow all competition rules set by TNS officials on the day.</li>
+    <li>TNS is not liable for injuries sustained during training or competition.</li>
+  </ul>
+
+  <h2>5. Limitation of Liability</h2>
+  <p>The platform is provided "as is". TNS is not responsible for data loss, downtime, or any indirect damages arising from use of the platform.</p>
+
+  <h2>6. Changes</h2>
+  <p>We may update these Terms at any time. Continued use of the platform after changes constitutes acceptance of the updated Terms.</p>
+
+  <h2>7. Contact</h2>
+  <p>For questions, reach us via <a href="https://www.instagram.com/tnsarmwrestling" target="_blank">@tnsarmwrestling</a> on Instagram or visit us at NIBM, Pune.</p>
+</div>
+
+
+<script>
+(function(){
+  var nav=document.getElementById('tns-nav');
+  if(nav){window.addEventListener('scroll',function(){nav.classList.toggle('stuck',window.scrollY>20);},{passive:true});}
+  window.tnsToggleMob=function(){
+    var h=document.getElementById('tns-ham'),m=document.getElementById('tns-mob-nav');
+    if(h)h.classList.toggle('open');if(m)m.classList.toggle('open');
+    document.body.style.overflow=(m&&m.classList.contains('open'))?'hidden':'';
+  };
+  window.tnsCloseMob=function(){
+    var h=document.getElementById('tns-ham'),m=document.getElementById('tns-mob-nav');
+    if(h)h.classList.remove('open');if(m)m.classList.remove('open');
+    document.body.style.overflow='';
+  };
+  function updateNavAuth(){
+    var user=(typeof TNS_DB!=='undefined')?TNS_DB.getCurrentUser():null;
+    var a=document.getElementById('tns-nav-auth');
+    var ma=document.getElementById('tns-mob-auth');
+    if(!a)return;
+    if(user){
+      var av=user.profilePic?'<img src="'+user.profilePic+'">':(user.avatar||(user.name||'U').slice(0,2).toUpperCase());
+      a.innerHTML='<a href="profile.html" class="tns-user-pill"><div class="tns-u-av">'+av+'</div><span class="tns-uname">'+user.username+'</span></a>';
+      if(ma){
+        ma.innerHTML='<a href="profile.html" class="tns-mob-prof" onclick="tnsCloseMob()"><div class="tns-u-av">'+av+'</div><div><div class="tns-mob-prof-name">'+user.name+'</div><div class="tns-mob-prof-sub">'+user.level.toUpperCase()+' · @'+user.username+'</div></div></a><button onclick="TNS_DB.logout();window.location.href='index.html'" class="tns-mob-signout">Sign Out</button>';
+      }
+    } else {
+      a.innerHTML='<a href="auth.html" class="tns-btn-signin">Sign In</a><a href="auth.html?mode=register" class="tns-btn-join">Join TNS</a>';
+      if(ma)ma.innerHTML='<a href="auth.html?mode=register" class="tns-mob-join" onclick="tnsCloseMob()">Join TNS</a>';
+    }
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateNavAuth);}else{updateNavAuth();}
+})();
+</script>
+
+</body>
+</html>
